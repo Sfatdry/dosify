@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'register_screen.dart';
+import 'register_screen.dart'; // Asegúrate de que el nombre del archivo sea correcto
 import '../theme/colors.dart';
 import '../widgets/neumorphic_input.dart';
 
@@ -11,14 +11,43 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Controladores para capturar el texto
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
+    // Limpieza de controladores
     _userController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // Función para manejar el inicio de sesión
+  void _handleLogin() {
+    String username = _userController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Por favor, ingresa tu usuario y contraseña"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    // Simulación de inicio de sesión exitoso
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("¡Bienvenido de nuevo, $username!"),
+        backgroundColor: DosifyColors.primaryTeal,
+      ),
+    );
+
+    // Aquí navegarías a la pantalla principal (Home/Dashboard)
+    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainNavigation()));
   }
 
   @override
@@ -31,14 +60,16 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo de Dosify
+              // Logo de la App
               Image.asset(
                 'assets/logo_dosify.png',
                 height: 100,
+                // Si el logo falla, muestra un icono médico por defecto
                 errorBuilder: (context, error, stackTrace) => 
-                    const Icon(Icons.medical_services, size: 100, color: DosifyColors.primaryTeal),
+                    const Icon(Icons.medical_information, size: 100, color: DosifyColors.primaryTeal),
               ),
               const SizedBox(height: 40),
+              
               const Text(
                 "Bienvenido",
                 style: TextStyle(
@@ -46,6 +77,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontWeight: FontWeight.bold, 
                   color: DosifyColors.primaryTeal
                 ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Inicie sesión para continuar",
+                style: TextStyle(color: DosifyColors.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 40),
               
@@ -57,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
               
-              // Input de Contraseña
+              // Input de Contraseña (El widget NeumorphicInput ahora gestiona el ojo)
               NeumorphicInput(
                 hintText: "Contraseña", 
                 icon: Icons.lock_outline, 
@@ -72,24 +108,28 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    print("Login con: ${_userController.text}");
-                  },
+                  onPressed: _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DosifyColors.primaryTeal,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15)
+                    ),
                     elevation: 5,
                   ),
                   child: const Text(
                     "Iniciar Sesión", 
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                    style: TextStyle(
+                      color: Colors.white, 
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 16
+                    )
                   ),
                 ),
               ),
               
               const SizedBox(height: 30),
 
-              // ENLACE A REGISTRO
+              // Enlace para ir a la pantalla de Registro
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 
-class NeumorphicInput extends StatelessWidget {
+class NeumorphicInput extends StatefulWidget {
   final String hintText;
   final IconData icon;
   final bool isPassword;
@@ -14,6 +14,20 @@ class NeumorphicInput extends StatelessWidget {
     required this.controller,
     this.isPassword = false,
   });
+
+  @override
+  State<NeumorphicInput> createState() => _NeumorphicInputState();
+}
+
+class _NeumorphicInputState extends State<NeumorphicInput> {
+  late bool _obscureText;
+
+  @override
+  void initState() {
+    super.initState();
+    // Si es password, empieza oculto
+    _obscureText = widget.isPassword;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +44,26 @@ class NeumorphicInput extends StatelessWidget {
         ],
       ),
       child: TextField(
-        controller: controller,
-        obscureText: isPassword,
+        controller: widget.controller,
+        obscureText: _obscureText,
         decoration: InputDecoration(
-          hintText: hintText,
+          hintText: widget.hintText,
           hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-          prefixIcon: Icon(icon, color: DosifyColors.primaryTeal),
+          prefixIcon: Icon(widget.icon, color: DosifyColors.primaryTeal),
+          // Aquí agregamos el OJO
+          suffixIcon: widget.isPassword 
+            ? IconButton(
+                icon: Icon(
+                  _obscureText ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscureText = !_obscureText;
+                  });
+                },
+              )
+            : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         ),
