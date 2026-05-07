@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.4
+  sdk: '>=3.11.4 <4.0.0'
 
 dependencies:
   flutter:
@@ -27,4 +27,3 @@ flutter:
   assets:
     - assets/logo_dosify.png
     - assets/google_logo.png
-    dependencies:
