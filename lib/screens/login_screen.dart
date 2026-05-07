@@ -1,141 +1,71 @@
+// En lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../widgets/neumorphic_input.dart';
-import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _userController = TextEditingController(); // Cambiado a Usuario
   final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: DosifyColors.backgroundColor,
-      body: SafeArea(
+      body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
+          padding: const EdgeInsets.all(30.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 50),
-              // --- EL LOGO DE LA TERCERA IMAGEN ---
-              Image.asset(
-                'assets/logo_dosify.png',
-                height: 120, // Un tamaño elegante y visible
-              ),
-              const SizedBox(height: 10),
-              // Subtítulo formal
+              Image.asset('assets/logo_dosify.png', height: 100), // Logo oficial
+              const SizedBox(height: 40),
               const Text(
-                "Gestión Inteligente de Medicación",
-                style: TextStyle(
-                  color: DosifyColors.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 0.5,
-                ),
+                "Bienvenido",
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: DosifyColors.primaryTeal),
               ),
-              const SizedBox(height: 60),
-
-              // --- CAMPOS DE ENTRADA NEUMÓRFICOS ---
+              const SizedBox(height: 40),
+              
+              // Input de Usuario
               NeumorphicInput(
-                hintText: "Correo Electrónico",
-                icon: Icons.email_outlined,
-                controller: _emailController,
+                hintText: "Nombre de Usuario", 
+                icon: Icons.person_outline, 
+                controller: _userController
               ),
-              const SizedBox(height: 25),
+              const SizedBox(height: 20),
+              
+              // Input de Contraseña
               NeumorphicInput(
-                hintText: "Contraseña",
-                icon: Icons.lock_outline,
-                isPassword: true,
-                controller: _passwordController,
+                hintText: "Contraseña", 
+                icon: Icons.lock_outline, 
+                isPassword: true, 
+                controller: _passwordController
               ),
-
-              // Opciones secundarias formales
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "¿Olvidó su contraseña?",
-                    style: TextStyle(color: DosifyColors.primaryTeal, fontSize: 13),
+              
+              const SizedBox(height: 40),
+              
+              // Botón de Inicio de Sesión mejorado
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {
+                    print("Iniciando sesión con: ${_userController.text}");
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: DosifyColors.primaryTeal,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   ),
+                  child: const Text("Iniciar Sesión", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
-              ),
-              const SizedBox(height: 35),
-
-              // --- BOTÓN PRINCIPAL CON DEGRADADO ---
-              _buildPrimaryButton(text: "Iniciar Sesión", onPressed: () {}),
-
-              const SizedBox(height: 50),
-
-              // Enlace de registro formal
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("¿No tiene una cuenta?",
-                      style: TextStyle(color: DosifyColors.textSecondary, fontSize: 14)),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
-                    },
-                    child: const Text(
-                      "Regístrese aquí",
-                      style: TextStyle(
-                          color: DosifyColors.primaryTeal,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14),
-                    ),
-                  ),
-                ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Widget reutilizable para el botón principal formal
-  Widget _buildPrimaryButton({required String text, required VoidCallback onPressed}) {
-    return Container(
-      width: double.infinity,
-      height: 55,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        gradient: const LinearGradient(
-          colors: [DosifyColors.primaryTeal, DosifyColors.accentGreen],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: DosifyColors.primaryTeal.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
           ),
         ),
       ),

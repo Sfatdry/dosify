@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart' hide BoxDecoration, BoxShadow; // IMPORTANTE: Ocultar originales
-import 'package:flutter_inset_box_shadow/flutter_inset_box_shadow.dart'; // IMPORTANTE: Usar nuevos
+import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../widgets/neumorphic_input.dart';
 
@@ -11,10 +10,66 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  // Controladores para capturar el texto
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  
+  // Variable para el avatar (índice seleccionado)
   int _selectedAvatarIndex = -1;
+
+  @override
+  void dispose() {
+    // Es buena práctica limpiar los controladores al cerrar la pantalla
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // Función para manejar el registro
+  void _handleRegistration() {
+    final String name = _nameController.text;
+    final String email = _emailController.text;
+    final String password = _passwordController.text;
+
+    // Validación básica
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Por favor, completa todos los campos"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedAvatarIndex == -1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Por favor, selecciona un avatar"),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
+
+    // Aquí ya tienes los datos listos para enviar a tu base de datos
+    print("Registro Exitoso:");
+    print("Usuario: $name, Email: $email, Avatar: $_selectedAvatarIndex");
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("¡Cuenta creada correctamente!"),
+        backgroundColor: DosifyColors.accentGreen,
+      ),
+    );
+
+    // Navegar de regreso al Login tras un breve delay
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pop(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +88,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
           child: Column(
             children: [
+              // Logo
+              Image.asset(
+                'assets/logo_dosify.png',
+                height: 80,
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.favorite, size: 80, color: DosifyColors.primaryTeal),
+              ),
+              const SizedBox(height: 20),
+              
               // Encabezado
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -58,7 +121,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const Icon(Icons.person_add_outlined, size: 50, color: DosifyColors.accentGreen),
                 ],
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
 
               // Selector de Avatar
               const Align(
@@ -72,7 +135,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _buildAvatarSelector(),
               const SizedBox(height: 40),
 
-              // Inputs
+              // Inputs de Texto
               NeumorphicInput(
                 hintText: "Nombre Completo",
                 icon: Icons.person_outline,
@@ -94,7 +157,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 45),
 
-              _buildPrimaryButton(text: "Finalizar Registro", onPressed: () {}),
+              // Botón de Acción
+              _buildPrimaryButton(
+                text: "Finalizar Registro", 
+                onPressed: _handleRegistration,
+              ),
 
               const SizedBox(height: 30),
               
@@ -112,15 +179,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildAvatarSelector() {
+    final List<IconData> avatarIcons = [
+      Icons.face_retouching_natural,
+      Icons.face_unlock_outlined,
+      Icons.face_6_outlined,
+      Icons.face_5_outlined,
+    ];
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(4, (index) {
-        final List<IconData> avatarIcons = [
-          Icons.face_retouching_natural,
-          Icons.face_unlock_outlined,
-          Icons.face_6_outlined,
-          Icons.face_5_outlined,
-        ];
         bool isSelected = _selectedAvatarIndex == index;
         return GestureDetector(
           onTap: () => setState(() => _selectedAvatarIndex = index),
@@ -128,36 +196,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: DosifyColors.backgroundColor,
+              color: isSelected ? DosifyColors.primaryTeal.withOpacity(0.1) : Colors.white,
               shape: BoxShape.circle,
-              border: isSelected ? Border.all(color: DosifyColors.accentGreen, width: 2) : null,
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        blurRadius: 5,
-                        offset: const Offset(3, 3),
-                        color: Colors.black.withOpacity(0.1),
-                        inset: true, // PROPIEDAD DE LA LIBRERÍA
-                      ),
-                      BoxShadow(
-                        blurRadius: 5,
-                        offset: const Offset(-3, -3),
-                        color: Colors.white.withOpacity(0.7),
-                        inset: true, // PROPIEDAD DE LA LIBRERÍA
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        blurRadius: 8,
-                        offset: const Offset(4, 4),
-                        color: Colors.black.withOpacity(0.08),
-                      ),
-                      BoxShadow(
-                        blurRadius: 8,
-                        offset: const Offset(-4, -4),
-                        color: Colors.white.withOpacity(0.7),
-                      ),
-                    ],
+              border: Border.all(
+                color: isSelected ? DosifyColors.accentGreen : Colors.transparent,
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: isSelected ? 4 : 8,
+                  offset: isSelected ? const Offset(0, 2) : const Offset(0, 4),
+                  color: Colors.black.withOpacity(0.05),
+                ),
+              ],
             ),
             child: Icon(
               avatarIcons[index],
