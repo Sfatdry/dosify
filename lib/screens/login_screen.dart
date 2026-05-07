@@ -1,5 +1,5 @@
-// En lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
+import 'register_screen.dart';
 import '../theme/colors.dart';
 import '../widgets/neumorphic_input.dart';
 
@@ -11,8 +11,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _userController = TextEditingController(); // Cambiado a Usuario
+  final _userController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _userController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +31,21 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/logo_dosify.png', height: 100), // Logo oficial
+              // Logo de Dosify
+              Image.asset(
+                'assets/logo_dosify.png',
+                height: 100,
+                errorBuilder: (context, error, stackTrace) => 
+                    const Icon(Icons.medical_services, size: 100, color: DosifyColors.primaryTeal),
+              ),
               const SizedBox(height: 40),
               const Text(
                 "Bienvenido",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: DosifyColors.primaryTeal),
+                style: TextStyle(
+                  fontSize: 28, 
+                  fontWeight: FontWeight.bold, 
+                  color: DosifyColors.primaryTeal
+                ),
               ),
               const SizedBox(height: 40),
               
@@ -50,20 +67,53 @@ class _LoginScreenState extends State<LoginScreen> {
               
               const SizedBox(height: 40),
               
-              // Botón de Inicio de Sesión mejorado
+              // Botón de Inicio de Sesión
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
                   onPressed: () {
-                    print("Iniciando sesión con: ${_userController.text}");
+                    print("Login con: ${_userController.text}");
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DosifyColors.primaryTeal,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    elevation: 5,
                   ),
-                  child: const Text("Iniciar Sesión", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "Iniciar Sesión", 
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                  ),
                 ),
+              ),
+              
+              const SizedBox(height: 30),
+
+              // ENLACE A REGISTRO
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "¿No tienes cuenta? ",
+                    style: TextStyle(color: DosifyColors.textSecondary),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                      );
+                    },
+                    child: const Text(
+                      "Regístrate",
+                      style: TextStyle(
+                        color: DosifyColors.primaryTeal,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
