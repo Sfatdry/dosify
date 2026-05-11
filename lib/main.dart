@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-// 1. Corregimos las rutas de importación según tu carpeta 'screens'
 import 'screens/login_screen.dart';
 import 'screens/main_navigation.dart';
-// Borramos el import de historial de aquí, ya que se usa en main_navigation.dart
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,14 +24,12 @@ class MyApp extends StatelessWidget {
       title: 'Dosify',
       theme: ThemeData(
         useMaterial3: true,
-        // Color turquesa corporativo de Dosify
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2B889C),
           primary: const Color(0xFF2B889C),
         ),
-        scaffoldBackgroundColor: const Color(0xFFF1F9F9), // Fondo pastel de tus capturas
+        scaffoldBackgroundColor: const Color(0xFFF1F9F9),
       ),
-      // Iniciamos en Login
       home: const LoginScreen(), 
       routes: {
         '/home': (context) => const MainNavigation(),
