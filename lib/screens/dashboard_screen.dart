@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  // Añadimos esta variable para que el nombre no esté "pegado" al código
+  final String userName;
+
+  const DashboardScreen({
+    super.key, 
+    this.userName = "María" // Valor por defecto
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F9F9), // Fondo pastel muy claro
+      backgroundColor: const Color(0xFFF1F9F9),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -17,7 +23,11 @@ class DashboardScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
               backgroundColor: const Color(0xFF5AB396).withOpacity(0.2),
-              child: const Text("MG", style: TextStyle(color: Color(0xFF2B889C), fontWeight: FontWeight.bold)),
+              // Extraemos las iniciales del nombre dinámico
+              child: Text(
+                userName.substring(0, 1).toUpperCase() + (userName.contains(" ") ? userName.split(" ")[1][0] : ""), 
+                style: const TextStyle(color: Color(0xFF2B889C), fontWeight: FontWeight.bold)
+              ),
             ),
           )
         ],
@@ -27,13 +37,13 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("¡Hola, María! 👋", 
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
+            // Aquí usamos la variable userName
+            Text("¡Hola, $userName! 👋", 
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
             const Text("Tu salud está bajo control hoy", 
               style: TextStyle(color: Colors.grey, fontSize: 16)),
             const SizedBox(height: 25),
             
-            // Stats Row
             Row(
               children: [
                 Expanded(child: _miniStatCard("Pendientes", "3", Icons.timer, Colors.orangeAccent)),
@@ -47,14 +57,16 @@ class DashboardScreen extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2B889C))),
             const SizedBox(height: 10),
             _doseTile("Amoxicilina", "08:00 AM", "500mg - Después de comer", Icons.medication),
-      _doseTile("Losartán", "10:00 AM", "50mg - Ayunas", Icons.vaccines),
+            _doseTile("Losartán", "10:00 AM", "50mg - Ayunas", Icons.vaccines),
             _doseTile("Vitamina C", "01:00 PM", "1g - Tabletas", Icons.water_drop),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
+  // Tus widgets auxiliares se mantienen iguales para no romper tu diseño
   Widget _miniStatCard(String title, String val, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -82,7 +94,6 @@ class DashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
       ),
       child: ListTile(
