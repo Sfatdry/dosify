@@ -39,11 +39,12 @@ class _LoginScreenState extends State<LoginScreen> {
     // 1. Quitamos el 'const' de MainNavigation
     // 2. Le pasamos el texto de '_userController' como userName
     Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MainNavigation(userName: username),
-      ),
-    );
+  context,
+  MaterialPageRoute(
+    builder: (context) => MainNavigation(userName: _userController.text),
+  ),
+);
+    
   }
 
   @override

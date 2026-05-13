@@ -31,10 +31,12 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF1F9F9),
       ),
       home: const LoginScreen(), 
-      routes: {
-        '/home': (context) => const MainNavigation(),
-        '/login': (context) => const LoginScreen(),
-      },
+     // En MaterialApp
+routes: {
+  '/login': (context) => const LoginScreen(),
+  // quitamos el 'const' y ponemos un nombre temporal
+  '/home': (context) => MainNavigation(userName: "Usuario"), 
+},
     );
   }
 }
