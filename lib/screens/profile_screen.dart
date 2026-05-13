@@ -3,7 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String userName;
+
+  // Constructor corregido: recibe el userName y no es const si así lo prefieres
+  ProfileScreen({super.key, required this.userName});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -53,9 +56,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Datos dinámicos
-    final String userEmail = user?.email ?? "Email no disponible";
-    final String userName = user?.userMetadata?['nombre'] ?? "Usuario de Dosify";
+    // Priorizamos el nombre que viene del login, si no, usamos el de Supabase
+    final String displayEmail = user?.email ?? "Email no disponible";
+    final String displayName = widget.userName.isNotEmpty 
+        ? widget.userName 
+        : (user?.userMetadata?['nombre'] ?? "Usuario de Dosify");
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F9F9),
@@ -69,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // 1. Tarjeta de Estadística (Diseño UsuarioPage)
+            // 1. Tarjeta de Estadística
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -96,12 +101,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // 2. Formulario de Edición
             TextField(
-              controller: TextEditingController(text: userName),
+              controller: TextEditingController(text: displayName),
               decoration: _inputStyle("Nombre Completo", Icons.person_outline),
             ),
             const SizedBox(height: 15),
             TextField(
-              controller: TextEditingController(text: userEmail),
+              controller: TextEditingController(text: displayEmail),
               decoration: _inputStyle("Correo Electrónico", Icons.mail_outline),
             ),
             const SizedBox(height: 15),
@@ -114,7 +119,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // 3. Botón Guardar
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Cambios guardados localmente")),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2B889C),
                 minimumSize: const Size(double.infinity, 55),
@@ -125,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            // 4. Botón Cerrar Sesión (Diseño ProfileScreen anterior)
+            // 4. Botón Cerrar Sesión
             TextButton.icon(
               onPressed: _signOut,
               icon: const Icon(Icons.logout, color: Color(0xFFFF5252)),

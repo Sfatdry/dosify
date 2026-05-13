@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-
-// Importamos TODAS las pantallas
 import 'dashboard_screen.dart';
-import 'recordatorio_screen.dart';    // Tus horarios/calendario
-import 'historial_screen.dart';   // El diseño Pro del 94%
+import 'recordatorio_screen.dart'; 
+import 'historial_screen.dart';
 import 'inventory_screen.dart';
 import 'profile_screen.dart';
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  // 1. Agregamos el parámetro para recibir el nombre del login
+  final String userName; 
+  
+  const MainNavigation({super.key, required this.userName});
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -19,19 +20,19 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    // Agregamos HistorialScreen a la lista
-    final List<Widget> screens = [
-      const DashboardScreen(userName: "María"), 
-      const RecordatorioScreen(),    // Pestaña 1: Horarios
-      const HistorialScreen(),   // Pestaña 2: ¡EL DISEÑO PRO!
-      const InventoryScreen(), 
-      const ProfileScreen(),    
-    ];
+    // 2. Creamos la lista de pantallas usando el nombre real (widget.userName)
+  final List<Widget> _screens = [
+  DashboardScreen(userName: widget.userName), // SIN 'const' porque lleva variable
+  const RecordatorioScreen(),                // CON 'const' (si no recibe nada)
+  const HistorialScreen(),                   // CON 'const'
+  InventoryScreen(userName: widget.userName), // SIN 'const'
+  ProfileScreen(userName: widget.userName),   // SIN 'const'
+];
 
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
-        children: screens,
+        children: _screens, // <--- Asegúrate que este nombre coincida con la lista de arriba
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -40,15 +41,15 @@ class _MainNavigationState extends State<MainNavigation> {
             _selectedIndex = index;
           });
         },
-        type: BottomNavigationBarType.fixed, // Importante para que quepan 5 iconos
+        type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xFF00ACC1),
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Inicio"),
-          BottomNavigationBarItem(icon: Icon(Icons.alarm), label: "Horario"), // Schedule
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Historial"), // El 94%
-          BottomNavigationBarItem(icon: Icon(Icons.inventory), label: "Inventario"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), label: "Inicio"),
+          BottomNavigationBarItem(icon: Icon(Icons.alarm), label: "Horario"),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Historial"),
+          BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), label: "Inventario"),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Perfil"),
         ],
       ),
     );

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 class InventoryScreen extends StatelessWidget {
-  const InventoryScreen({super.key});
+  final String userName;
 
+  // El constructor NO debe tener 'const' antes de InventoryScreen
+  InventoryScreen({super.key, required this.userName}); 
+  
   @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
