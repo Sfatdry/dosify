@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
-import 'main_navigation.dart'; // Importante para que funcione la navegación
-import '../theme/colors.dart';
+import 'main_navigation.dart'; 
 import '../widgets/neumorphic_input.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Función corregida para entrar al Dashboard
+  // --- FUNCIÓN CORREGIDA ---
   void _handleLogin() {
     String username = _userController.text.trim();
     String password = _passwordController.text.trim();
@@ -37,17 +36,23 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Navegación real al Dashboard / MainNavigation
+    // 1. Quitamos el 'const' de MainNavigation
+    // 2. Le pasamos el texto de '_userController' como userName
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const MainNavigation()),
+      MaterialPageRoute(
+        builder: (context) => MainNavigation(userName: username),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Usamos una variable para el color por si acaso DosifyColors falla
+    const Color tealColor = Color(0xFF00ACC1); 
+
     return Scaffold(
-      backgroundColor: DosifyColors.backgroundColor,
+      backgroundColor: const Color(0xFFF1F9F9),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(30.0),
@@ -55,12 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo
-              Image.asset(
-                'assets/logo_dosify.png',
-                height: 100,
-                errorBuilder: (context, error, stackTrace) => 
-                    const Icon(Icons.medical_services, size: 100, color: DosifyColors.primaryTeal),
-              ),
+              const Icon(Icons.medical_services, size: 100, color: tealColor),
               const SizedBox(height: 40),
               
               const Text(
@@ -68,13 +68,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(
                   fontSize: 28, 
                   fontWeight: FontWeight.bold, 
-                  color: DosifyColors.primaryTeal
+                  color: Color(0xFF006064),
                 ),
               ),
               const SizedBox(height: 10),
               const Text(
                 "Inicie sesión para continuar",
-                style: TextStyle(color: DosifyColors.textSecondary, fontSize: 14),
+                style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               const SizedBox(height: 40),
               
@@ -82,16 +82,16 @@ class _LoginScreenState extends State<LoginScreen> {
               NeumorphicInput(
                 hintText: "Nombre de Usuario", 
                 icon: Icons.person_outline, 
-                controller: _userController
+                controller: _userController,
               ),
               const SizedBox(height: 20),
               
-              // Input Contraseña con el Ojo (debes haber actualizado el widget NeumorphicInput)
+              // Input Contraseña
               NeumorphicInput(
                 hintText: "Contraseña", 
                 icon: Icons.lock_outline, 
                 isPassword: true, 
-                controller: _passwordController
+                controller: _passwordController,
               ),
               
               const SizedBox(height: 40),
@@ -101,15 +101,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: _handleLogin,
+                  onPressed: _handleLogin, // Llamamos a la función corregida
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: DosifyColors.primaryTeal,
+                    backgroundColor: tealColor,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                     elevation: 5,
                   ),
                   child: const Text(
                     "Iniciar Sesión", 
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ),
               ),
@@ -120,10 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "¿No tienes cuenta? ",
-                    style: TextStyle(color: DosifyColors.textSecondary),
-                  ),
+                  const Text("¿No tienes cuenta? ", style: TextStyle(color: Colors.grey)),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -134,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text(
                       "Regístrate",
                       style: TextStyle(
-                        color: DosifyColors.primaryTeal,
+                        color: tealColor,
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,
                       ),
