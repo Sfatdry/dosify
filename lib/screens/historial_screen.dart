@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
 class HistorialScreen extends StatelessWidget {
-  const HistorialScreen({super.key});
+  final String userName; // Recibimos el nombre dinámico
+
+  const HistorialScreen({super.key, required this.userName});
 
   @override
   Widget build(BuildContext context) {
+    // Obtenemos la inicial del nombre para el círculo (Ej: "Juan" -> "J")
+    String initial = userName.isNotEmpty ? userName[0].toUpperCase() : "?";
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Fondo muy claro
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -32,15 +37,20 @@ class HistorialScreen extends StatelessWidget {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  children: const [
-                    Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                    Text("María González", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
+                  children: [
+                    const Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                    // AQUÍ USAMOS EL NOMBRE REAL
+                    Text(
+                      userName, 
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064))
+                    ),
                   ],
                 ),
                 const SizedBox(width: 10),
-                const CircleAvatar(
-                  backgroundColor: Color(0xFF00C853),
-                  child: Text("MG", style: TextStyle(color: Colors.white, fontSize: 12)),
+                CircleAvatar(
+                  backgroundColor: const Color(0xFF00C853),
+                  // AQUÍ USAMOS LA INICIAL REAL
+                  child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -166,7 +176,12 @@ class HistorialScreen extends StatelessWidget {
         color: const Color(0xFF00ACC1),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: const Text("¡Excelente progreso!", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+      child: const Center(
+        child: Text(
+          "¡Excelente progreso!", 
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+        ),
+      ),
     );
   }
 }

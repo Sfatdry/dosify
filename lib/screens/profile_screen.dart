@@ -5,7 +5,6 @@ import 'login_screen.dart';
 class ProfileScreen extends StatefulWidget {
   final String userName;
 
-  // Constructor corregido: recibe el userName y no es const si así lo prefieres
   ProfileScreen({super.key, required this.userName});
 
   @override
@@ -13,10 +12,37 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Obtenemos el usuario real de Supabase
   final User? user = Supabase.instance.client.auth.currentUser;
 
-  // Función para cerrar sesión
+  // 1. Declaramos los controladores
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // 2. Los inicializamos con los datos reales
+    // Priorizamos widget.userName para el nombre
+    _nameController = TextEditingController(text: widget.userName);
+    
+    // Obtenemos el email de Supabase
+    _emailController = TextEditingController(text: user?.email ?? "Sin correo disponible");
+    
+    // Ponemos puntos para la contraseña por seguridad
+    _passwordController = TextEditingController(text: "********");
+  }
+
+  @override
+  void dispose() {
+    // 3. Muy importante: liberar la memoria al cerrar la pantalla
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _signOut() async {
     try {
       await Supabase.instance.client.auth.signOut();
@@ -36,7 +62,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Estilo de los campos de texto
   InputDecoration _inputStyle(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
@@ -56,12 +81,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Priorizamos el nombre que viene del login, si no, usamos el de Supabase
-    final String displayEmail = user?.email ?? "Email no disponible";
-    final String displayName = widget.userName.isNotEmpty 
-        ? widget.userName 
-        : (user?.userMetadata?['nombre'] ?? "Usuario de Dosify");
-
     return Scaffold(
       backgroundColor: const Color(0xFFF1F9F9),
       appBar: AppBar(
@@ -74,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // 1. Tarjeta de Estadística
+            // Tarjeta de Estadística
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -99,29 +118,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 30),
 
-            // 2. Formulario de Edición
+            // 4. Formulario con controladores asignados
             TextField(
-              controller: TextEditingController(text: displayName),
+              controller: _nameController, // <--- ASIGNADO
               decoration: _inputStyle("Nombre Completo", Icons.person_outline),
             ),
             const SizedBox(height: 15),
             TextField(
-              controller: TextEditingController(text: displayEmail),
+              controller: _emailController, // <--- ASIGNADO
               decoration: _inputStyle("Correo Electrónico", Icons.mail_outline),
             ),
             const SizedBox(height: 15),
             TextField(
+              controller: _passwordController, // <--- ASIGNADO
               obscureText: true,
               decoration: _inputStyle("Contraseña", Icons.lock_outline),
             ),
             
             const SizedBox(height: 30),
 
-            // 3. Botón Guardar
             ElevatedButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Cambios guardados localmente")),
+                  const SnackBar(content: Text("Cambios guardados")),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -134,7 +153,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            // 4. Botón Cerrar Sesión
             TextButton.icon(
               onPressed: _signOut,
               icon: const Icon(Icons.logout, color: Color(0xFFFF5252)),

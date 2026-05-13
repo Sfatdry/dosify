@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class RecordatorioScreen extends StatefulWidget {
-  const RecordatorioScreen({super.key});
+  final String userName; // <--- AGREGADO
+
+  const RecordatorioScreen({super.key, required this.userName}); // <--- CORREGIDO
 
   @override
   State<RecordatorioScreen> createState() => _RecordatorioScreenState();
@@ -20,37 +22,24 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: primaryCyan,
-            child: Icon(Icons.medication, color: Colors.white, size: 20),
-          ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)),
-            Text("Control inteligente de medicamentos", style: TextStyle(fontSize: 12, color: Colors.grey)),
-          ],
-        ),
+        title: const Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)),
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.only(right: 16),
             child: Row(
               children: [
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  children: const [
-                    Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                    Text("María González", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
+                  children: [
+                    const Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                    Text(widget.userName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064))), // <--- CORREGIDO
                   ],
                 ),
                 const SizedBox(width: 10),
-                const CircleAvatar(
-                  backgroundColor: Color(0xFF00C853),
-                  child: Text("MG", style: TextStyle(color: Colors.white, fontSize: 12)),
+                CircleAvatar(
+                  backgroundColor: const Color(0xFF00C853),
+                  child: Text(widget.userName[0].toUpperCase(), style: const TextStyle(color: Colors.white)), // <--- INICIAL DINÁMICA
                 ),
               ],
             ),
@@ -72,15 +61,11 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Encabezado del Card
                 Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: primaryCyan,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      decoration: BoxDecoration(color: primaryCyan, borderRadius: BorderRadius.circular(12)),
                       child: const Icon(Icons.notifications_none, color: Colors.white),
                     ),
                     const SizedBox(width: 15),
@@ -88,8 +73,6 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                   ],
                 ),
                 const SizedBox(height: 30),
-
-                // Tipo de Alerta
                 const Text("Tipo de Alerta", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064))),
                 const SizedBox(height: 10),
                 Row(
@@ -100,8 +83,6 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                   ],
                 ),
                 const SizedBox(height: 25),
-
-                // Repeticiones
                 const Text("Repeticiones", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064))),
                 const SizedBox(height: 10),
                 TextField(
@@ -114,8 +95,6 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                   ),
                 ),
                 const SizedBox(height: 25),
-
-                // Switch Recordatorio Activo
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                   decoration: BoxDecoration(
@@ -126,8 +105,8 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Icon(Icons.notifications_none, color: primaryCyan),
                           SizedBox(width: 10),
                           Text("Recordatorio activo", style: TextStyle(color: Color(0xFF0369A1), fontWeight: FontWeight.w500)),
