@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-// Si estos nombres subrayan en rojo, es que el archivo se llama distinto en tu carpeta
+// Importamos TODAS las pantallas
 import 'dashboard_screen.dart';
-import 'schedule_screen.dart';
+import 'recordatorio_screen.dart';    // Tus horarios/calendario
+import 'historial_screen.dart';   // El diseño Pro del 94%
 import 'inventory_screen.dart';
 import 'profile_screen.dart';
 
@@ -18,16 +19,16 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    // Definimos la lista aquí adentro para evitar errores de inicialización
+    // Agregamos HistorialScreen a la lista
     final List<Widget> screens = [
-      DashboardScreen(), 
-      ScheduleScreen(),  
-      InventoryScreen(), 
-      ProfileScreen(),   
+      const DashboardScreen(userName: "María"), 
+      const RecordatorioScreen(),    // Pestaña 1: Horarios
+      const HistorialScreen(),   // Pestaña 2: ¡EL DISEÑO PRO!
+      const InventoryScreen(), 
+      const ProfileScreen(),    
     ];
 
     return Scaffold(
-      // IndexedStack mantiene el estado de las pantallas al cambiar de pestaña
       body: IndexedStack(
         index: _selectedIndex,
         children: screens,
@@ -39,12 +40,13 @@ class _MainNavigationState extends State<MainNavigation> {
             _selectedIndex = index;
           });
         },
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.fixed, // Importante para que quepan 5 iconos
         selectedItemColor: const Color(0xFF00ACC1),
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Inicio"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "Historial"),
+          BottomNavigationBarItem(icon: Icon(Icons.alarm), label: "Horario"), // Schedule
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Historial"), // El 94%
           BottomNavigationBarItem(icon: Icon(Icons.inventory), label: "Inventario"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
         ],
