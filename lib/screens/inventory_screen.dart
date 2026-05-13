@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class InventoryScreen extends StatelessWidget {
   final String userName;
 
-  // El constructor NO debe tener 'const' antes de InventoryScreen
+  // El constructor recibe el userName
   InventoryScreen({super.key, required this.userName}); 
   
   @override
@@ -12,14 +12,14 @@ class InventoryScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: _buildAppBar(primaryCyan),
-      body: Center( // <--- Esto centra todo horizontalmente
+      appBar: _buildAppBar(primaryCyan), // Llama al AppBar corregido
+      body: Center( 
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 900), // <--- Limita el ancho para que no se vea gigante
+          constraints: const BoxConstraints(maxWidth: 900), 
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(30),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center, // <--- Centra los elementos de la columna
+              crossAxisAlignment: CrossAxisAlignment.center, 
               children: [
                 // 1. FILA DE MEDICAMENTOS (Scroll Horizontal)
                 const Text(
@@ -42,11 +42,11 @@ class InventoryScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
 
-                // 2. RESUMEN DE INVENTARIO (Centrado)
+                // 2. RESUMEN DE INVENTARIO
                 _buildResumenSeccion(primaryCyan),
                 const SizedBox(height: 40),
 
-                // 3. REABASTECIMIENTO (Centrado)
+                // 3. REABASTECIMIENTO
                 _buildReabastecimientoSeccion(),
               ],
             ),
@@ -56,7 +56,7 @@ class InventoryScreen extends StatelessWidget {
     );
   }
 
-  // --- BLOQUE 2: RESUMEN (CENTRADITO) ---
+  // --- BLOQUE 2: RESUMEN ---
   Widget _buildResumenSeccion(Color primary) {
     return Container(
       width: double.infinity,
@@ -70,7 +70,6 @@ class InventoryScreen extends StatelessWidget {
         children: [
           _sectionHeader(primary, Icons.inventory_2_outlined, "Resumen de Inventario", "Estado general del stock"),
           const SizedBox(height: 30),
-          // Usamos Wrap para que los contadores se acomoden bonito
           Wrap(
             spacing: 20,
             runSpacing: 20,
@@ -101,7 +100,7 @@ class InventoryScreen extends StatelessWidget {
           _sectionHeader(Colors.orange, Icons.shopping_cart_outlined, "Reabastecimiento", "Medicamentos por comprar"),
           const SizedBox(height: 30),
           Container(
-            constraints: const BoxConstraints(maxWidth: 500), // Para que la tarjeta de Losartán no sea infinita
+            constraints: const BoxConstraints(maxWidth: 500),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
             child: Row(
@@ -133,12 +132,9 @@ class InventoryScreen extends StatelessWidget {
     );
   }
 
-  // Los demás widgets auxiliares (_buildMedCard, _statusTile, etc.) se mantienen igual que arriba
-  // solo asegúrate de cerrar bien los paréntesis.
-  
   Widget _sectionHeader(Color color, IconData icon, String title, String sub) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center, // Centra el encabezado
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: Colors.white)),
         const SizedBox(width: 15),
@@ -149,7 +145,7 @@ class InventoryScreen extends StatelessWidget {
 
   Widget _statusTile(String label, String count, Color color, IconData icon) {
     return Container(
-      width: 220, // Ancho fijo para que se vean uniformes
+      width: 220,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(15), border: Border.all(color: color.withOpacity(0.1))),
       child: Row(
@@ -162,19 +158,40 @@ class InventoryScreen extends StatelessWidget {
     );
   }
 
+  // --- APPBAR CORREGIDO (SIN MARÍA) ---
   PreferredSizeWidget _buildAppBar(Color cyan) {
+    String initial = userName.isNotEmpty ? userName[0].toUpperCase() : "?";
+
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
       leading: Padding(padding: const EdgeInsets.all(8.0), child: CircleAvatar(backgroundColor: cyan, child: const Icon(Icons.medication, color: Colors.white))),
-      title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)), Text("Control inteligente", style: TextStyle(fontSize: 12, color: Colors.grey))]),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, 
+        children: const [
+          Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)), 
+          Text("Control inteligente", style: TextStyle(fontSize: 12, color: Colors.grey))
+        ]
+      ),
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 20),
           child: Row(children: [
-            Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: const [Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)), Text("María González", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064)))]),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center, 
+              crossAxisAlignment: CrossAxisAlignment.end, 
+              children: [
+                const Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)), 
+                // NOMBRE DINÁMICO
+                Text(userName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064)))
+              ]
+            ),
             const SizedBox(width: 12),
-            const CircleAvatar(backgroundColor: Color(0xFF00C853), child: Text("MG", style: TextStyle(color: Colors.white, fontSize: 12))),
+            // INICIAL DINÁMICA
+            CircleAvatar(
+              backgroundColor: const Color(0xFF00C853), 
+              child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))
+            ),
           ]),
         )
       ],
