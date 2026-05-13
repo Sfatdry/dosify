@@ -21,14 +21,19 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     // 2. Creamos la lista de pantallas usando el nombre real (widget.userName)
-  final List<Widget> _screens = [
-  DashboardScreen(userName: widget.userName), // SIN 'const' porque lleva variable
-  const RecordatorioScreen(),                // CON 'const' (si no recibe nada)
-  const HistorialScreen(),                   // CON 'const'
-  InventoryScreen(userName: widget.userName), // SIN 'const'
-  ProfileScreen(userName: widget.userName),   // SIN 'const'
+// Busca la lista _screens dentro de _MainNavigationState
+final List<Widget> _screens = [
+  DashboardScreen(userName: widget.userName),
+  
+  // ERROR 1 CORREGIDO: Quitamos 'const' y pasamos userName
+  RecordatorioScreen(userName: widget.userName), 
+  
+  // ERROR 2 CORREGIDO: Quitamos 'const' y pasamos userName
+  HistorialScreen(userName: widget.userName),    
+  
+  InventoryScreen(userName: widget.userName),
+  ProfileScreen(userName: widget.userName),
 ];
-
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
