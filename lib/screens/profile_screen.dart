@@ -18,11 +18,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
 
+  // Variable para controlar si la contraseña se ve o no
+  bool _obscurePassword = true;
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.userName);
-    _emailController = TextEditingController(text: user?.email ?? "usuario@email.com");
+    
+    // CORRECCIÓN: Si user?.email es nulo, intenta obtenerlo de los metadatos o pon uno por defecto
+    String emailDisplay = user?.email ?? user?.userMetadata?['email'] ?? "correo@ejemplo.com";
+    _emailController = TextEditingController(text: emailDisplay);
+    
     _passwordController = TextEditingController(text: "********");
   }
 
@@ -51,9 +58,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  InputDecoration _inputStyle(String label, IconData icon) {
+  // Estilo de los inputs mejorado
+  InputDecoration _inputStyle(String label, IconData icon, {Widget? suffixIcon}) {
     return InputDecoration(
       prefixIcon: Icon(icon, color: const Color(0xFF00ACC1), size: 20),
+      suffixIcon: suffixIcon, // Para el icono del ojo
       filled: true,
       fillColor: const Color(0xFFF0F9FF),
       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
@@ -111,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Tarjeta de Estadística
+                // Tarjeta de Estadística
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -136,25 +145,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // 2. Encabezado "Perfil de Usuario"
+                // Encabezado Perfil
                 Row(
                   children: [
                     Stack(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00ACC1),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
+                          decoration: BoxDecoration(color: const Color(0xFF00ACC1), borderRadius: BorderRadius.circular(15)),
                           child: const Icon(Icons.person, color: Colors.white, size: 35),
                         ),
                         Positioned(
-                          bottom: 0,
-                          right: 0,
+                          bottom: 0, right: 0,
                           child: Container(
-                            width: 14,
-                            height: 14,
+                            width: 14, height: 14,
                             decoration: BoxDecoration(
                               color: const Color(0xFF00C853),
                               shape: BoxShape.circle,
@@ -176,7 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // 3. Formulario (Campos de texto)
+                // Formulario
                 const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
                 const SizedBox(height: 8),
                 TextField(controller: _nameController, decoration: _inputStyle("Nombre", Icons.person_outline)),
@@ -184,24 +188,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 20),
                 const Text("Correo electrónico", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
                 const SizedBox(height: 8),
-                TextField(controller: _emailController, decoration: _inputStyle("Email", Icons.mail_outline)),
+                TextField(
+                  controller: _emailController, 
+                  readOnly: true, // El correo normalmente no se cambia así
+                  decoration: _inputStyle("Email", Icons.mail_outline)
+                ),
                 
                 const SizedBox(height: 20),
                 const Text("Contraseña", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
                 const SizedBox(height: 8),
-                TextField(controller: _passwordController, obscureText: true, decoration: _inputStyle("Password", Icons.lock_outline)),
+                TextField(
+                  controller: _passwordController, 
+                  obscureText: _obscurePassword, // Variable dinámica
+                  decoration: _inputStyle(
+                    "Password", 
+                    Icons.lock_outline,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: const Color(0xFF00ACC1),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: 40),
 
-                // 4. Botones de acción
+                // Botones
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
                       child: ElevatedButton(
-                        onPressed: () {
-                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cambios guardados")));
-                        },
+                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cambios guardados"))),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF00ACC1),
                           padding: const EdgeInsets.symmetric(vertical: 18),
@@ -213,9 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(width: 15),
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () {
-                           Navigator.pop(context); // O la acción que prefieras para cancelar
-                        },
+                        onPressed: () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           side: const BorderSide(color: Color(0xFFE2E8F0)),
