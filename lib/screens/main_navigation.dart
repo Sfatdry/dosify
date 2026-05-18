@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-// Asegúrate de que estas rutas coincidan con tus archivos reales
 import 'dashboard_screen.dart';
 import 'historial_screen.dart';
 import 'inventory_screen.dart';
 import 'profile_screen.dart';
-import 'recordatorio_screen.dart'; // Verifica que el archivo se llame así
+import 'recordatorio_screen.dart'; 
+import 'tratamiento_screen.dart'; // ¡Listo!
 
 class MainNavigation extends StatefulWidget {
   final String userName;
@@ -20,14 +20,14 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    // 2. Lista de pantallas corregida
+    // 1. LISTADO COMPLETO CON LAS 6 PANTALLAS
     final List<Widget> _screens = [
-      DashboardScreen(userName: widget.userName),
-      // Si tu clase se llama RecordatorioScreen, asegúrate de que acepte userName
-      RecordatorioScreen(userName: widget.userName), 
-      HistorialScreen(userName: widget.userName),
-      InventoryScreen(userName: widget.userName),
-      ProfileScreen(userName: widget.userName),
+      DashboardScreen(userName: widget.userName),     // Índice 0
+      RecordatorioScreen(userName: widget.userName),  // Índice 1
+      HistorialScreen(userName: widget.userName),     // Índice 2
+      InventoryScreen(userName: widget.userName),     // Índice 3
+      ProfileScreen(userName: widget.userName),       // Índice 4
+      TratamientoScreen(userName: widget.userName),   // Índice 5 (Nueva pantalla)
     ];
 
     return Scaffold(
@@ -35,23 +35,45 @@ class _MainNavigationState extends State<MainNavigation> {
         index: _selectedIndex,
         children: _screens,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
+      // 2. BOTÓN FLOTANTE PARA LA INTERFAZ DE TRATAMIENTO
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
           setState(() {
-            _selectedIndex = index;
+            _selectedIndex = 5; // Cambia directamente a la pantalla de Tratamiento
           });
         },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF00ACC1),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Inicio'),
-          BottomNavigationBarItem(icon: Icon(Icons.alarm), label: 'Recordatorios'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Historial'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Inventario'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
+        backgroundColor: const Color(0xFF00ACC1),
+        shape: const CircleBorder(),
+        child: const Icon(Icons.calendar_today, color: Colors.white),
+      ),
+      // Coloca el botón flotante en medio de la barra inferior
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      
+      // 3. BARRA DE NAVEGACIÓN ADAPTADA PARA DEJAR ESPACIO EN MEDIO
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        clipBehavior: Clip.antiAlias,
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex == 5 ? 0 : _selectedIndex, // Evita errores visuales si está en tratamiento
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: const Color(0xFF00ACC1),
+          unselectedItemColor: Colors.grey,
+          elevation: 0,
+          backgroundColor: Colors.transparent, // Permite ver el diseño del BottomAppBar
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Inicio'),
+            BottomNavigationBarItem(icon: Icon(Icons.alarm), label: 'Alertas'),
+            BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Historial'),
+            BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Inventario'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
+          ],
+        ),
       ),
     );
   }
