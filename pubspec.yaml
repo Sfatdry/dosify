@@ -22,7 +22,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
   assets:
-    - assets/logo_dosify.png
-    - assets/google_logo.png
+    - assets/dosify_logo_hd.PNG
