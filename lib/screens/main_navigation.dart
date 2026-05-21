@@ -22,6 +22,7 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
   late List<Widget> _screens;
+  final ScrollController _scrollController = ScrollController(); // Controlador para la barrita deslizable
 
   @override
   void initState() {
@@ -55,6 +56,23 @@ class _MainNavigationState extends State<MainNavigation> {
     {'label': 'Nota de Voz', 'icon': Icons.mic_none_rounded},
     {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded}, 
   ];
+
+  // Funciones para mover la barra con las flechas de guía
+  void _scrollLeft() {
+    _scrollController.animateTo(
+      _scrollController.offset - 150,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollRight() {
+    _scrollController.animateTo(
+      _scrollController.offset + 150,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,47 +130,71 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
           ),
 
-          // --- BARRA DE MENÚ CORREGIDA CON WRAP (EVITA EL DESBORDE OCULTO) ---
+          // --- BARRA DE MENÚ CON TAMAÑO NORMAL, SCROLL Y BOTONES DE GUÍA ---
           Container(
             width: double.infinity,
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Wrap(
-              spacing: 8.0, // Espacio horizontal entre botones
-              runSpacing: 8.0, // Espacio vertical cuando salte de línea
-              alignment: WrapAlignment.start,
-              children: List.generate(_menuItems.length, (index) {
-                bool isSelected = _selectedIndex == index;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedIndex = index),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF00ACC1) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _menuItems[index]['icon'],
-                          size: 16,
-                          color: isSelected ? Colors.white : const Color(0xFF64748B),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          _menuItems[index]['label'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            color: isSelected ? Colors.white : const Color(0xFF64748B),
-                          ),
-                        ),
-                      ],
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                // Flecha Izquierda
+                IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF64748B)),
+                  onPressed: _scrollLeft,
+                ),
+                
+                // El contenedor del Scroll en su tamaño original
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(
+                        children: List.generate(_menuItems.length, (index) {
+                          bool isSelected = _selectedIndex == index;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedIndex = index),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12), // Regresa el padding premium
+                              decoration: BoxDecoration(
+                                color: isSelected ? const Color(0xFF00ACC1) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _menuItems[index]['icon'],
+                                    size: 18, // Tamaño normal de icono
+                                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _menuItems[index]['label'],
+                                    style: TextStyle(
+                                      fontSize: 13, // Tamaño de fuente original
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                      color: isSelected ? Colors.white : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
                     ),
                   ),
-                );
-              }),
+                ),
+
+                // Flecha Derecha para que sepa que hay más contenido
+                IconButton(
+                  icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF64748B)),
+                  onPressed: _scrollRight,
+                ),
+              ],
             ),
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
@@ -167,5 +209,11 @@ class _MainNavigationState extends State<MainNavigation> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 }
