@@ -16,58 +16,65 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  // Lista de pantallas (puedes crear placeholders para Medicamento, Dosis, etc.)
   late List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+    // Aquí cargamos las pantallas pasándoles el userName si lo necesitan
     _screens = [
       DashboardScreen(userName: widget.userName),
       ProfileScreen(userName: widget.userName),
       TratamientoScreen(userName: widget.userName),
-      const Center(child: Text("Pantalla Medicamento")), // Placeholder
-      const Center(child: Text("Pantalla Dosis")),       // Placeholder
+      const Center(child: Text("Pantalla Medicamento (Placeholder)", style: TextStyle(color: Color(0xFF006064)))),
+      const Center(child: Text("Pantalla Dosis (Placeholder)", style: TextStyle(color: Color(0xFF006064)))),
       RecordatorioScreen(userName: widget.userName),
       InventoryScreen(userName: widget.userName),
     ];
   }
 
-  // Definición de los items del menú según tu captura
+  // Menú exacto de tus capturas
   final List<Map<String, dynamic>> _menuItems = [
-    {'label': 'Dashboard', 'icon': Icons.dashboard},
-    {'label': 'Usuario', 'icon': Icons.person_outline},
+    {'label': 'Dashboard', 'icon': Icons.grid_view_rounded},
+    {'label': 'Usuario', 'icon': Icons.person_outline_rounded},
     {'label': 'Tratamiento', 'icon': Icons.assignment_outlined},
-    {'label': 'Medicamento', 'icon': Icons.link},
-    {'label': 'Dosis', 'icon': Icons.check_circle_outline},
-    {'label': 'Recordatorio', 'icon': Icons.notifications_none},
-    {'label': 'Inventario', 'icon': Icons.inventory_2_outlined},
+    {'label': 'Medicamento', 'icon': Icons.link_rounded},
+    {'label': 'Dosis', 'icon': Icons.check_circle_outline_rounded},
+    {'label': 'Recordatorio', 'icon': Icons.notifications_none_rounded},
+    {'label': 'Inventario', 'icon': Icons.archive_outlined},
   ];
 
   @override
   Widget build(BuildContext context) {
-    String initial = widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : "M";
+    String initial = widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : "A";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
         children: [
-          // --- HEADER SUPERIOR (Dosify + Bienvenida) ---
+          // --- HEADER PRINCIPAL ÚNICO ---
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
             color: Colors.white,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.medication, color: Color(0xFF00ACC1), size: 30),
-                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00ACC1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.local_hospital_rounded, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
-                        Text("Dosify", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
-                        Text("Control inteligente de medicamentos", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                        Text("Dosify", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
+                        Text("Control inteligente de medicamentos", style: TextStyle(fontSize: 11, color: Colors.grey)),
                       ],
                     ),
                   ],
@@ -77,14 +84,15 @@ class _MainNavigationState extends State<MainNavigation> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                        Text(widget.userName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
+                        const Text("Bienvenida", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text(widget.userName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
                       ],
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     CircleAvatar(
+                      radius: 18,
                       backgroundColor: const Color(0xFF00C853),
-                      child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                      child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -92,53 +100,52 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
           ),
 
-          // --- BARRA DE MENÚ CON SCROLL HORIZONTAL ---
+          // --- BARRA DE MENÚ SUPERIOR DE TUS CAPTURAS ---
           Container(
-            height: 60,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
-            ),
-            child: ListView.builder(
+            width: double.infinity,
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              itemCount: _menuItems.length,
-              itemBuilder: (context, index) {
-                bool isSelected = _selectedIndex == index;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedIndex = index),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF00ACC1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _menuItems[index]['icon'],
-                          size: 18,
-                          color: isSelected ? Colors.white : const Color(0xFF64748B),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _menuItems[index]['label'],
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              child: Row(
+                children: List.generate(_menuItems.length, (index) {
+                  bool isSelected = _selectedIndex == index;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedIndex = index),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFF00ACC1) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _menuItems[index]['icon'],
+                            size: 18,
                             color: isSelected ? Colors.white : const Color(0xFF64748B),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Text(
+                            _menuItems[index]['label'],
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected ? Colors.white : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                }),
+              ),
             ),
           ),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
 
-          // --- CONTENIDO DE LA PANTALLA ---
+          // --- CONTENIDO VARIABLE ---
           Expanded(
             child: IndexedStack(
               index: _selectedIndex,
