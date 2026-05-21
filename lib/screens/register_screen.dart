@@ -17,7 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     const Color textCyan = Color(0xFF006064);
 
     return Scaffold(
-      backgroundColor: Colors.white, // Fondo blanco como solicitaste
+      backgroundColor: Colors.white, // Fondo blanco impecable
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -37,10 +37,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         padding: const EdgeInsets.all(30),
         child: Column(
           children: [
-            // 1. EL LOGO (Usa la imagen de alta calidad)
+            // 1. EL LOGO (Con la ruta directa corregida en mayúsculas)
             Center(
               child: Image.asset(
-                'assets/images/dosify_logo_hd.png', // Asegúrate de agregar la imagen en assets
+                'assets/dosify_logo_hd.PNG', 
                 height: 120,
               ),
             ),
@@ -69,7 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 40),
 
-            // 3. SELECCIÓN DE GÉNERO (Solo 3 iconos grandes)
+            // 3. SELECCIÓN DE GÉNERO (3 opciones limpias)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -157,8 +157,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         prefixIcon: Icon(icon, color: primaryColor),
         suffixIcon: suffix,
         filled: true,
-        fillColor: const Color(0xFFF8FAFC), // Un gris ultra claro para contraste
-        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        fillColor: const Color(0xFFF8FAFC),
+        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(color: Colors.grey.shade300),
