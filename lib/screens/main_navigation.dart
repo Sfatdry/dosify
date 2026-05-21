@@ -4,12 +4,11 @@ import 'profile_screen.dart';
 import 'tratamiento_screen.dart';
 import 'inventory_screen.dart';
 import 'recordatorio_screen.dart';
-// IMPORTS DE LAS INTERFACES INTEGRADAS
 import 'medicamento_screen.dart';
 import 'dosis_screen.dart';
 import 'dieta_screen.dart';
 import 'nota_de_voz_screen.dart';
-import 'farmacia_screen.dart'; // <-- Aquí está el import de Farmacia
+import 'farmacia_screen.dart'; 
 import 'historial_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -28,7 +27,6 @@ class _MainNavigationState extends State<MainNavigation> {
   void initState() {
     super.initState();
     
-    // Lista completa de las 11 pantallas sin que falte ninguna
     _screens = [
       DashboardScreen(userName: widget.userName),
       ProfileScreen(userName: widget.userName),
@@ -40,11 +38,10 @@ class _MainNavigationState extends State<MainNavigation> {
       InventoryScreen(userName: widget.userName),
       DietaScreen(userName: widget.userName),      
       NotaDeVozScreen(userName: widget.userName),  
-      FarmaciaScreen(userName: widget.userName),    // <-- Pantalla de Farmacia agregada
+      FarmaciaScreen(userName: widget.userName),    
     ];
   }
 
-  // Listado de los 11 ítems del menú superior con sus respectivos íconos
   final List<Map<String, dynamic>> _menuItems = [
     {'label': 'Dashboard', 'icon': Icons.grid_view_rounded},
     {'label': 'Usuario', 'icon': Icons.person_outline_rounded},
@@ -56,7 +53,7 @@ class _MainNavigationState extends State<MainNavigation> {
     {'label': 'Inventario', 'icon': Icons.archive_outlined},
     {'label': 'Dieta', 'icon': Icons.restaurant_rounded},
     {'label': 'Nota de Voz', 'icon': Icons.mic_none_rounded},
-    {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded}, // <-- Botón de Farmacia agregado
+    {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded}, 
   ];
 
   @override
@@ -115,47 +112,47 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
           ),
 
-          // --- BARRA DE MENÚ SUPERIOR (CON SCROLL HORIZONTAL) ---
+          // --- BARRA DE MENÚ CORREGIDA CON WRAP (EVITA EL DESBORDE OCULTO) ---
           Container(
             width: double.infinity,
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(_menuItems.length, (index) {
-                  bool isSelected = _selectedIndex == index;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedIndex = index),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF00ACC1) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _menuItems[index]['icon'],
-                            size: 18,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Wrap(
+              spacing: 8.0, // Espacio horizontal entre botones
+              runSpacing: 8.0, // Espacio vertical cuando salte de línea
+              alignment: WrapAlignment.start,
+              children: List.generate(_menuItems.length, (index) {
+                bool isSelected = _selectedIndex == index;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedIndex = index),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF00ACC1) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _menuItems[index]['icon'],
+                          size: 16,
+                          color: isSelected ? Colors.white : const Color(0xFF64748B),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _menuItems[index]['label'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                             color: isSelected ? Colors.white : const Color(0xFF64748B),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _menuItems[index]['label'],
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                              color: isSelected ? Colors.white : const Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  );
-                }),
-              ),
+                  ),
+                );
+              }),
             ),
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
