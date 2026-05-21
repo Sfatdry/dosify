@@ -52,164 +52,166 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
             ),
             const SizedBox(height: 40),
 
-            // 2. CONTENEDOR PRINCIPAL: DETALLES DEL MEDICAMENTO (FORMULARIO)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15)
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Encabezado de la configuración
-                  Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: const Icon(Icons.display_settings, color: primaryCyan),
-                      ),
-                      const SizedBox(width: 15),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text("Detalles del Medicamento", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
-                          Text("Configuración y dosificación", style: TextStyle(color: Colors.grey, fontSize: 14)),
-                        ],
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 35),
-
-                  // Campo: Nombre del medicamento
-                  _buildLabel("Nombre del medicamento"),
-                  _buildTextField(_nombreController, Icons.link, primaryCyan),
-                  const SizedBox(height: 25),
-
-                  // Campo: Dosis
-                  _buildLabel("Dosis"),
-                  _buildTextField(_dosisController, null, primaryCyan),
-                  const SizedBox(height: 25),
-
-                  // Fila dividida: Frecuencia y Duración
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Frecuencia (horas)"),
-                            _buildTextField(_frecuenciaController, Icons.access_time, primaryCyan),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Duración (días)"),
-                            _buildTextField(_duracionController, Icons.calendar_today_outlined, primaryCyan),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Banner interactivo: Medicamento Crítico
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isCritico = !_isCritico;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0F9FF),
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: const Color(0xFFE0F2FE)),
-                      ),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: _isCritico,
-                            activeColor: Colors.orange,
-                            onChanged: (val) {
-                              setState(() {
-                                _isCritico = val ?? false;
-                              });
-                            },
+            // 2. CONTENEDOR PRINCIPAL: DETALLES DEL MEDICAMENTO (FORMULARIO COMPLETAMENTE CENTRADO)
+            Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 550), // Evita que se estire en entorno Web/Tablet
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15)
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Encabezado de la configuración
+                    Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(15),
                           ),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.orange,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 15),
-                          Column(
+                          child: const Icon(Icons.display_settings, color: primaryCyan),
+                        ),
+                        const SizedBox(width: 15),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text("Detalles del Medicamento", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
+                            Text("Configuración y dosificación", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                          ],
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 35),
+
+                    // Campo: Nombre del medicamento
+                    _buildLabel("Nombre del medicamento"),
+                    _buildTextField(_nombreController, Icons.link, primaryCyan),
+                    const SizedBox(height: 25),
+
+                    // Campo: Dosis
+                    _buildLabel("Dosis"),
+                    _buildTextField(_dosisController, null, primaryCyan),
+                    const SizedBox(height: 25),
+
+                    // Fila dividida: Frecuencia y Duración
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text("Medicamento crítico", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 15)),
-                              Text("Requiere adherencia estricta", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                            children: [
+                              _buildLabel("Frecuencia (horas)"),
+                              _buildTextField(_frecuenciaController, Icons.access_time, primaryCyan),
                             ],
-                          )
-                        ],
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildLabel("Duración (días)"),
+                              _buildTextField(_duracionController, Icons.calendar_today_outlined, primaryCyan),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Banner interactivo: Medicamento Crítico
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isCritico = !_isCritico;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F9FF),
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(color: const Color(0xFFE0F2FE)),
+                        ),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: _isCritico,
+                              activeColor: Colors.orange,
+                              onChanged: (val) {
+                                setState(() {
+                                  _isCritico = val ?? false;
+                                });
+                              },
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.orange,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+                            ),
+                            const SizedBox(width: 15),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text("Medicamento crítico", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 15)),
+                                Text("Requiere adherencia estricta", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                              ],
+                            )
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 35),
+                    const SizedBox(height: 35),
 
-                  // Botones de Acción Inferiores (Guardar y Cancelar)
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Medicamento guardado con éxito")),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryCyan,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    // Botones de Acción Inferiores (Guardar y Cancelar)
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Medicamento guardado con éxito")),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryCyan,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            ),
+                            child: const Text("Guardar Medicamento", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                           ),
-                          child: const Text("Guardar Medicamento", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                         ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        flex: 1,
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            side: BorderSide.none,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          flex: 1,
+                          child: OutlinedButton(
+                            onPressed: () {},
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: const Color(0xFFF1F5F9),
+                              side: BorderSide.none,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            ),
+                            child: const Text("Cancelar", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 16)),
                           ),
-                          child: const Text("Cancelar", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 16)),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -270,7 +272,6 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
             children: [
               CircleAvatar(
                 backgroundColor: iconColor.withOpacity(0.1),
-                // ICONO CORREGIDO AQUÍ:
                 child: Icon(Icons.medication, color: iconColor, size: 20),
               ),
               if (isCritico)
