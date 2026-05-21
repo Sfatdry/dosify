@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 class InventoryScreen extends StatelessWidget {
   final String userName;
 
-  // El constructor recibe el userName
-  InventoryScreen({super.key, required this.userName}); 
+  const InventoryScreen({super.key, required this.userName}); 
   
   @override
   Widget build(BuildContext context) {
@@ -12,7 +11,7 @@ class InventoryScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: _buildAppBar(primaryCyan), // Llama al AppBar corregido
+      // ¡OJO! SIN AppBar aquí dentro para evitar que se vea duplicado
       body: Center( 
         child: Container(
           constraints: const BoxConstraints(maxWidth: 900), 
@@ -111,7 +110,7 @@ class InventoryScreen extends StatelessWidget {
                   children: const [
                     Text("Losartán", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)), 
                     Text("Quedan 8 días", style: TextStyle(fontSize: 14, color: Colors.grey))
-                  ]
+                  ],
                 ),
                 const Text("Urgente", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
               ],
@@ -155,46 +154,6 @@ class InventoryScreen extends StatelessWidget {
           Icon(icon, color: color, size: 35),
         ],
       ),
-    );
-  }
-
-  // --- APPBAR CORREGIDO (SIN MARÍA) ---
-  PreferredSizeWidget _buildAppBar(Color cyan) {
-    String initial = userName.isNotEmpty ? userName[0].toUpperCase() : "?";
-
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: Padding(padding: const EdgeInsets.all(8.0), child: CircleAvatar(backgroundColor: cyan, child: const Icon(Icons.medication, color: Colors.white))),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, 
-        children: const [
-          Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)), 
-          Text("Control inteligente", style: TextStyle(fontSize: 12, color: Colors.grey))
-        ]
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 20),
-          child: Row(children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center, 
-              crossAxisAlignment: CrossAxisAlignment.end, 
-              children: [
-                const Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)), 
-                // NOMBRE DINÁMICO
-                Text(userName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064)))
-              ]
-            ),
-            const SizedBox(width: 12),
-            // INICIAL DINÁMICA
-            CircleAvatar(
-              backgroundColor: const Color(0xFF00C853), 
-              child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))
-            ),
-          ]),
-        )
-      ],
     );
   }
 

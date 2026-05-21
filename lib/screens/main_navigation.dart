@@ -4,6 +4,12 @@ import 'profile_screen.dart';
 import 'tratamiento_screen.dart';
 import 'inventory_screen.dart';
 import 'recordatorio_screen.dart';
+// NUEVOS IMPORTS DE LAS INTERFACES INTEGRADAS
+import 'medicamento_screen.dart';
+import 'dosis_screen.dart';
+import 'dieta_screen.dart';
+import 'nota_de_voz_screen.dart';
+import 'farmacia_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   final String userName;
@@ -15,25 +21,28 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
-
   late List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    // Aquí cargamos las pantallas pasándoles el userName si lo necesitan
+    
+    // Lista de pantallas corregida integrando los nuevos componentes creados
     _screens = [
       DashboardScreen(userName: widget.userName),
       ProfileScreen(userName: widget.userName),
       TratamientoScreen(userName: widget.userName),
-      const Center(child: Text("Pantalla Medicamento (Placeholder)", style: TextStyle(color: Color(0xFF006064)))),
-      const Center(child: Text("Pantalla Dosis (Placeholder)", style: TextStyle(color: Color(0xFF006064)))),
+      MedicamentoScreen(userName: widget.userName), // Corregido sin placeholder
+      DosisScreen(userName: widget.userName),       // Corregido sin placeholder
       RecordatorioScreen(userName: widget.userName),
       InventoryScreen(userName: widget.userName),
+      DietaScreen(userName: widget.userName),       // Nueva interfaz agregada
+      NotaDeVozScreen(userName: widget.userName),   // Nueva interfaz agregada
+      FarmaciaScreen(userName: widget.userName),    // Nueva interfaz agregada
     ];
   }
 
-  // Menú exacto de tus capturas
+  // Listado del menú ampliado con los nuevos módulos de Dosify
   final List<Map<String, dynamic>> _menuItems = [
     {'label': 'Dashboard', 'icon': Icons.grid_view_rounded},
     {'label': 'Usuario', 'icon': Icons.person_outline_rounded},
@@ -42,6 +51,9 @@ class _MainNavigationState extends State<MainNavigation> {
     {'label': 'Dosis', 'icon': Icons.check_circle_outline_rounded},
     {'label': 'Recordatorio', 'icon': Icons.notifications_none_rounded},
     {'label': 'Inventario', 'icon': Icons.archive_outlined},
+    {'label': 'Dieta', 'icon': Icons.restaurant_rounded},
+    {'label': 'Nota de Voz', 'icon': Icons.mic_none_rounded},
+    {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded},
   ];
 
   @override
@@ -100,7 +112,7 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
           ),
 
-          // --- BARRA DE MENÚ SUPERIOR DE TUS CAPTURAS ---
+          // --- BARRA DE MENÚ SUPERIOR DE TUS CAPTURAS (CON SCROLL) ---
           Container(
             width: double.infinity,
             color: Colors.white,

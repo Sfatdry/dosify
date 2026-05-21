@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class RecordatorioScreen extends StatefulWidget {
-  final String userName; // <--- AGREGADO
+  final String userName;
 
-  const RecordatorioScreen({super.key, required this.userName}); // <--- CORREGIDO
+  const RecordatorioScreen({super.key, required this.userName});
 
   @override
   State<RecordatorioScreen> createState() => _RecordatorioScreenState();
@@ -19,33 +19,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F9F9),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Row(
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                    Text(widget.userName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064))), // <--- CORREGIDO
-                  ],
-                ),
-                const SizedBox(width: 10),
-                CircleAvatar(
-                  backgroundColor: const Color(0xFF00C853),
-                  child: Text(widget.userName[0].toUpperCase(), style: const TextStyle(color: Colors.white)), // <--- INICIAL DINÁMICA
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
+      // ¡OJO! SIN AppBar aquí dentro para integrarse perfectamente
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Center(
