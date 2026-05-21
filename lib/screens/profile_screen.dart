@@ -27,29 +27,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     user = supabase.auth.currentUser;
     
-    // CONEXIÓN CON BD: Obtenemos el nombre de los metadatos si existe, sino usamos el prop
     String displayName = user?.userMetadata?['full_name'] ?? widget.userName;
     
     _nameController = TextEditingController(text: displayName);
     _emailController = TextEditingController(text: user?.email ?? "");
-    _passwordController = TextEditingController(text: "********");
+    _passwordController = TextEditingController(text: ""); // La dejamos vacía por seguridad al inicio
   }
 
-  // FUNCIÓN PARA GUARDAR EN BASE DE DATOS
+  // FUNCIÓN CORREGIDA PARA GUARDAR EN BASE DE DATOS
   Future<void> _updateProfile() async {
     setState(() => _isLoading = true);
     try {
-      // Actualizamos los metadatos del usuario en Supabase Auth
+      // 1. Actualizar el nombre en los metadatos
       await supabase.auth.updateUser(
         UserAttributes(
           data: {'full_name': _nameController.text},
         ),
       );
 
+      // 2. Si el usuario escribió algo en el campo de contraseña, la actualizamos en Supabase Auth
+      if (_passwordController.text.isNotEmpty && _passwordController.text != "********") {
+        await supabase.auth.updateUser(
+          UserAttributes(password: _passwordController.text),
+        );
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("¡Perfil actualizado con éxito!")),
         );
+        setState(() {
+          _passwordController.clear(); // Limpiamos el campo de contraseña tras cambiarla
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -83,6 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   InputDecoration _inputStyle(String label, IconData icon, {Widget? suffixIcon}) {
     return InputDecoration(
+      hintText: label,
       prefixIcon: Icon(icon, color: const Color(0xFF00ACC1), size: 20),
       suffixIcon: suffixIcon,
       filled: true,
@@ -98,7 +108,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      // ¡OJO! SIN AppBar aquí para que no se duplique con el de MainNavigation
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
         child: Center(
@@ -120,7 +129,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Encabezado Interno del Perfil (Estilo Tarjeta)
                 Row(
                   children: [
                     Stack(
@@ -151,7 +159,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 35),
 
-                // CAMPOS DEL FORMULARIO
                 const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
                 const SizedBox(height: 8),
                 TextField(controller: _nameController, decoration: _inputStyle("Nombre", Icons.person_outline)),
@@ -161,18 +168,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: _emailController, 
-                  readOnly: true, // El email lo gestiona Supabase Auth directamente
+                  readOnly: true, 
                   decoration: _inputStyle("Email", Icons.mail_outline),
                 ),
                 
                 const SizedBox(height: 24),
-                const Text("Contraseña", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
+                const Text("Nueva contraseña (deja en blanco para mantener actual)", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _passwordController, 
                   obscureText: _obscurePassword,
                   decoration: _inputStyle(
-                    "Password", 
+                    "Escribe una nueva contraseña si deseas cambiarla", 
                     Icons.lock_outline,
                     suffixIcon: IconButton(
                       icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF00ACC1)),
@@ -183,7 +190,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 40),
 
-                // BOTÓN DE GUARDAR CON ESTADO DE CARGA
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
