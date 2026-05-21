@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Asegúrate de tener intl en tu pubspec.yaml
+import 'package:intl/intl.dart'; // Requiere 'flutter pub add intl' en tu terminal
 
 class TratamientoScreen extends StatefulWidget {
   final String userName;
-
   const TratamientoScreen({super.key, required this.userName});
 
   @override
@@ -11,13 +10,13 @@ class TratamientoScreen extends StatefulWidget {
 }
 
 class _TratamientoScreenState extends State<TratamientoScreen> {
-  // Controladores para las fechas
+  // Controladores para el manejo real de fechas
   final TextEditingController _fechaInicioController = TextEditingController();
   final TextEditingController _fechaFinController = TextEditingController();
   
   String _estadoSeleccionado = 'Activo'; // Estado inicial
 
-  // Función para abrir el calendario
+  // Función interactiva para abrir el calendario nativo
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -28,7 +27,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF00ACC1), // Color del calendario
+              primary: Color(0xFF00ACC1), // Color del calendario coincidente con Dosify
             ),
           ),
           child: child!,
@@ -42,105 +41,79 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
     }
   }
 
-  // Estilo de los campos (igual que en la imagen)
+  // Estilo unificado para los inputs (borde celeste, fondo suave)
   InputDecoration _inputStyle(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.grey),
-      suffixIcon: Icon(icon, color: const Color(0xFFE0F2F1), size: 20),
+      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+      suffixIcon: Icon(icon, color: const Color(0xFF00ACC1), size: 20),
       filled: true,
       fillColor: const Color(0xFFF0F9FF),
-      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0xFFBAE6FD)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0xFFBAE6FD)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFF00ACC1), width: 1.5),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    String initial = widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : "?";
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: Color(0xFF00ACC1),
-            child: Icon(Icons.medication, color: Colors.white, size: 20),
-          ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)),
-            Text("Control inteligente de medicamentos", style: TextStyle(fontSize: 10, color: Colors.grey)),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: Row(children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center, 
-                crossAxisAlignment: CrossAxisAlignment.end, 
-                children: [
-                  const Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                  Text(widget.userName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064)))
-                ]
-              ),
-              const SizedBox(width: 12),
-              CircleAvatar(
-                backgroundColor: const Color(0xFF00C853), 
-                child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 12))
-              ),
-            ]),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(25),
-        child: Center(
+      backgroundColor: const Color(0xFFF8FAFC), // Fondo limpio grisáceo
+      // ¡OJO! No hay AppBar aquí para que NO se duplique el header de Dosify
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 550),
-            padding: const EdgeInsets.all(30),
+            constraints: const BoxConstraints(maxWidth: 480),
+            padding: const EdgeInsets.all(35),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15)],
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04), 
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                )
+              ],
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Icono superior
+                // Icono superior centrado de Tratamiento
                 Container(
-                  padding: const EdgeInsets.all(15),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: const Color(0xFF00ACC1),
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.calendar_today, color: Colors.white, size: 35),
+                  child: const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 28),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 const Text(
                   "Tratamiento", 
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF006064))
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 32),
 
                 // Campo Fecha Inicio
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("Fecha de Inicio", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text("Fecha de Inicio", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
+                  ),
                 ),
-                const SizedBox(height: 10),
                 TextField(
                   controller: _fechaInicioController,
                   readOnly: true,
@@ -148,14 +121,16 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   decoration: _inputStyle("dd/mm/aaaa", Icons.calendar_month_outlined),
                 ),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 24),
 
                 // Campo Fecha Fin
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("Fecha de Fin", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text("Fecha de Fin", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
+                  ),
                 ),
-                const SizedBox(height: 10),
                 TextField(
                   controller: _fechaFinController,
                   readOnly: true,
@@ -163,18 +138,21 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   decoration: _inputStyle("dd/mm/aaaa", Icons.calendar_month_outlined),
                 ),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 24),
 
                 // Selector de Estado
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("Estado", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text("Estado", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
+                  ),
                 ),
-                const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: _estadoSeleccionado,
-                  decoration: _inputStyle("", Icons.info_outline),
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF00ACC1)),
+                  style: const TextStyle(color: Color(0xFF006064), fontSize: 15),
+                  decoration: _inputStyle("", Icons.info_outline_rounded),
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF00ACC1)),
                   items: ['Activo', 'Finalizado', 'Pausado'].map((String val) {
                     return DropdownMenuItem<String>(
                       value: val,
@@ -184,26 +162,26 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   onChanged: (val) => setState(() => _estadoSeleccionado = val!),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 35),
 
-                // Botón Guardar
+                // Botón Guardar (Estilo pill redondeado)
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Aquí agregarías la lógica para guardar en Supabase
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Tratamiento guardado exitosamente"))
                       );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00ACC1),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
                     child: const Text(
                       "Guardar Tratamiento", 
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)
                     ),
                   ),
                 ),

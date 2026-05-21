@@ -98,20 +98,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)),
-      ),
+      // ¡OJO! SIN AppBar aquí para que no se duplique con el de MainNavigation
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(25),
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: const BoxConstraints(maxWidth: 550),
+            padding: const EdgeInsets.all(35),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04), 
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Encabezado Perfil (Igual al diseño anterior)
+                // Encabezado Interno del Perfil (Estilo Tarjeta)
                 Row(
                   children: [
                     Stack(
@@ -119,13 +128,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(color: const Color(0xFF00ACC1), borderRadius: BorderRadius.circular(15)),
-                          child: const Icon(Icons.person, color: Colors.white, size: 35),
+                          child: const Icon(Icons.person, color: Colors.white, size: 32),
                         ),
                         Positioned(
                           bottom: 0, right: 0,
                           child: Container(
-                            width: 14, height: 14,
-                            decoration: BoxDecoration(color: const Color(0xFF00C853), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
+                            width: 13, height: 13,
+                            decoration: BoxDecoration(color: const Color(0xFF00C853), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
                           ),
                         )
                       ],
@@ -140,24 +149,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     )
                   ],
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 35),
 
                 // CAMPOS DEL FORMULARIO
-                const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
+                const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
                 const SizedBox(height: 8),
                 TextField(controller: _nameController, decoration: _inputStyle("Nombre", Icons.person_outline)),
                 
-                const SizedBox(height: 20),
-                const Text("Correo electrónico", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
+                const SizedBox(height: 24),
+                const Text("Correo electrónico", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _emailController, 
-                  readOnly: true, // El email es gestionado por Supabase Auth
+                  readOnly: true, // El email lo gestiona Supabase Auth directamente
                   decoration: _inputStyle("Email", Icons.mail_outline),
                 ),
                 
-                const SizedBox(height: 20),
-                const Text("Contraseña", style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF006064))),
+                const SizedBox(height: 24),
+                const Text("Contraseña", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _passwordController, 
@@ -181,12 +190,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: _isLoading ? null : _updateProfile,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00ACC1),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
                     child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Guardar Cambios", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text("Guardar Cambios", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                   ),
                 ),
                 
@@ -194,8 +204,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Center(
                   child: TextButton.icon(
                     onPressed: _signOut,
-                    icon: const Icon(Icons.logout, color: Colors.redAccent),
-                    label: const Text("Cerrar Sesión", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                    icon: const Icon(Icons.logout, color: Colors.redAccent, size: 18),
+                    label: const Text("Cerrar Sesión", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 14)),
                   ),
                 ),
               ],
