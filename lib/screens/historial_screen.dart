@@ -1,186 +1,212 @@
 import 'package:flutter/material.dart';
 
 class HistorialScreen extends StatelessWidget {
-  final String userName; // Recibimos el nombre dinámico
+  final String userName;
 
   const HistorialScreen({super.key, required this.userName});
 
   @override
   Widget build(BuildContext context) {
-    // Obtenemos la inicial del nombre para el círculo (Ej: "Juan" -> "J")
-    String initial = userName.isNotEmpty ? userName[0].toUpperCase() : "?";
+    const Color textCyan = Color(0xFF006064);
+    const Color primaryCyan = Color(0xFF00ACC1);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: Color(0xFF00ACC1),
-            child: Icon(Icons.medication, color: Colors.white, size: 20),
-          ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text("Dosify", style: TextStyle(color: Color(0xFF006064), fontWeight: FontWeight.bold)),
-            Text("Control inteligente de medicamentos", style: TextStyle(fontSize: 12, color: Colors.grey)),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(25),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 500),
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 15,
+                )
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                // 1. ENCABEZADO CON PORCENTAJE
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Bienvenida", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                    // AQUÍ USAMOS EL NOMBRE REAL
-                    Text(
-                      userName, 
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006064))
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Historial de\nCumplimiento",
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textCyan, height: 1.2),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          "Seguimiento del\ntratamiento",
+                          style: TextStyle(color: Colors.grey, fontSize: 14, height: 1.2),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: const [
+                        Text(
+                          "94%",
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryCyan),
+                        ),
+                        Text(
+                          "Adherencia",
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(width: 10),
-                CircleAvatar(
-                  backgroundColor: const Color(0xFF00C853),
-                  // AQUÍ USAMOS LA INICIAL REAL
-                  child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 25),
+
+                // 2. INDICADOR DE PORCENTAJE (TEXTO MINI + BARRA DE PROGRESO)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Text("Porcentaje de adherencia", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text("94%", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 12)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: const LinearProgressIndicator(
+                    value: 0.94,
+                    minHeight: 10,
+                    backgroundColor: Color(0xFFF1F5F9),
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)), // Verde Adherencia
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // 3. TARJETAS DE MÉTRICAS
+                _buildStatCard("Dosis Tomadas", "40", const Color(0xFF10B981), const Color(0xFFECFDF5), Icons.check_circle_outline),
+                const SizedBox(height: 15),
+                _buildStatCard("Dosis Omitidas", "1", const Color(0xFFF43F5E), const Color(0xFFFFF1F2), Icons.cancel_outlined),
+                const SizedBox(height: 15),
+                _buildStatCard("Dosis Tardías", "2", const Color(0xFFF59E0B), const Color(0xFFFEF3C7), Icons.access_time),
+                const SizedBox(height: 15),
+
+                // Tarjeta informativa: Total de dosis
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F9FF),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE0F2FE)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Expanded(
+                        child: Text(
+                          "Total de dosis en el\ntratamiento",
+                          style: TextStyle(color: textCyan, fontWeight: FontWeight.w500, fontSize: 15),
+                        ),
+                      ),
+                      Text(
+                        "43",
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0369A1)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 25),
+
+                // 4. BANNER MOTIVACIONAL INFERIOR
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: primaryCyan,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.trending_up, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(width: 15),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "¡Excelente progreso!",
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              "Mantén tu adherencia para obtener los mejores resultados en tu tratamiento.",
+                              style: TextStyle(
+                                color: Colors.white70, 
+                                fontSize: 13, 
+                                height: 1.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            _buildMainCard(),
-            const SizedBox(height: 20),
-            _buildTotalDosisCard(),
-            const SizedBox(height: 20),
-            _buildFooterMessage(),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMainCard() {
+  // --- WIDGET AUXILIAR PARA LAS TARJETAS DE ESTADÍSTICAS ---
+  Widget _buildStatCard(String title, String count, Color color, Color bgColor, IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("Historial de Cumplimiento", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text("Seguimiento del tratamiento", style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-              Column(
-                children: const [
-                  Text("94%", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF00ACC1))),
-                  Text("Adherencia", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              )
-            ],
-          ),
-          const SizedBox(height: 25),
-          const Text("Porcentaje de adherencia", style: TextStyle(fontSize: 12, color: Colors.grey)),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: const LinearProgressIndicator(
-              value: 0.94,
-              minHeight: 12,
-              backgroundColor: Color(0xFFF1F5F9),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00C853)),
-            ),
-          ),
-          const SizedBox(height: 30),
-          Row(
-            children: [
-              _buildStatBox("Dosis Tomadas", "40", const Color(0xFFE8F5E9), const Color(0xFF00C853), Icons.check_circle),
-              const SizedBox(width: 10),
-              _buildStatBox("Dosis Omitidas", "1", const Color(0xFFFFEBEE), const Color(0xFFE91E63), Icons.cancel),
-              const SizedBox(width: 10),
-              _buildStatBox("Dosis Tardías", "2", const Color(0xFFFFF8E1), const Color(0xFFFFB300), Icons.access_time_filled),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatBox(String title, String count, Color bgColor, Color iconColor, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: bgColor.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: bgColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: iconColor, size: 30),
-            const SizedBox(height: 10),
-            Text(title, style: TextStyle(fontSize: 10, color: iconColor, fontWeight: FontWeight.bold)),
-            Text(count, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTotalDosisCard() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F9FF),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: const Color(0xFFBAE6FD)),
+        border: Border.all(color: color.withOpacity(0.15)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          Text("Total de dosis en el tratamiento", style: TextStyle(color: Color(0xFF0369A1), fontWeight: FontWeight.w500)),
-          Text("43", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0369A1))),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  count,
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: color),
+                ),
+              ],
+            ),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFooterMessage() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF00ACC1),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: const Center(
-        child: Text(
-          "¡Excelente progreso!", 
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-        ),
       ),
     );
   }

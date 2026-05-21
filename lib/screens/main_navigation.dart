@@ -10,6 +10,7 @@ import 'dosis_screen.dart';
 import 'dieta_screen.dart';
 import 'nota_de_voz_screen.dart';
 import 'farmacia_screen.dart';
+import 'historial_screen.dart'; // <-- IMPORTA EL HISTORIAL AQUÍ
 
 class MainNavigation extends StatefulWidget {
   final String userName;
@@ -27,26 +28,28 @@ class _MainNavigationState extends State<MainNavigation> {
   void initState() {
     super.initState();
     
-    // Lista de pantallas corregida integrando los nuevos componentes creados
+    // Lista de pantallas con Historial integrado en la posición 3
     _screens = [
       DashboardScreen(userName: widget.userName),
       ProfileScreen(userName: widget.userName),
       TratamientoScreen(userName: widget.userName),
-      MedicamentoScreen(userName: widget.userName), // Corregido sin placeholder
-      DosisScreen(userName: widget.userName),       // Corregido sin placeholder
+      HistorialScreen(userName: widget.userName),   // <-- PANTALLA DE HISTORIAL ASIGNADA
+      MedicamentoScreen(userName: widget.userName), 
+      DosisScreen(userName: widget.userName),      
       RecordatorioScreen(userName: widget.userName),
       InventoryScreen(userName: widget.userName),
-      DietaScreen(userName: widget.userName),       // Nueva interfaz agregada
-      NotaDeVozScreen(userName: widget.userName),   // Nueva interfaz agregada
-      FarmaciaScreen(userName: widget.userName),    // Nueva interfaz agregada
+      DietaScreen(userName: widget.userName),      
+      NotaDeVozScreen(userName: widget.userName),  
+      FarmaciaScreen(userName: widget.userName),    
     ];
   }
 
-  // Listado del menú ampliado con los nuevos módulos de Dosify
+  // Listado del menú ampliado incluyendo el botón para el Historial
   final List<Map<String, dynamic>> _menuItems = [
     {'label': 'Dashboard', 'icon': Icons.grid_view_rounded},
     {'label': 'Usuario', 'icon': Icons.person_outline_rounded},
     {'label': 'Tratamiento', 'icon': Icons.assignment_outlined},
+    {'label': 'Historial', 'icon': Icons.bar_chart_rounded}, // <-- NUEVA PESTAÑA VISUAL
     {'label': 'Medicamento', 'icon': Icons.link_rounded},
     {'label': 'Dosis', 'icon': Icons.check_circle_outline_rounded},
     {'label': 'Recordatorio', 'icon': Icons.notifications_none_rounded},
@@ -112,7 +115,7 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
           ),
 
-          // --- BARRA DE MENÚ SUPERIOR DE TUS CAPTURAS (CON SCROLL) ---
+          // --- BARRA DE MENÚ SUPERIOR (CON SCROLL HORIZONTAL) ---
           Container(
             width: double.infinity,
             color: Colors.white,
