@@ -4,13 +4,13 @@ import 'profile_screen.dart';
 import 'tratamiento_screen.dart';
 import 'inventory_screen.dart';
 import 'recordatorio_screen.dart';
-// NUEVOS IMPORTS DE LAS INTERFACES INTEGRADAS
+// IMPORTS DE LAS INTERFACES INTEGRADAS
 import 'medicamento_screen.dart';
 import 'dosis_screen.dart';
 import 'dieta_screen.dart';
 import 'nota_de_voz_screen.dart';
-import 'farmacia_screen.dart';
-import 'historial_screen.dart'; // <-- IMPORTA EL HISTORIAL AQUÍ
+import 'farmacia_screen.dart'; // <-- Aquí está el import de Farmacia
+import 'historial_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   final String userName;
@@ -28,35 +28,35 @@ class _MainNavigationState extends State<MainNavigation> {
   void initState() {
     super.initState();
     
-    // Lista de pantallas con Historial integrado en la posición 3
+    // Lista completa de las 11 pantallas sin que falte ninguna
     _screens = [
       DashboardScreen(userName: widget.userName),
       ProfileScreen(userName: widget.userName),
       TratamientoScreen(userName: widget.userName),
-      HistorialScreen(userName: widget.userName),   // <-- PANTALLA DE HISTORIAL ASIGNADA
+      HistorialScreen(userName: widget.userName),   
       MedicamentoScreen(userName: widget.userName), 
       DosisScreen(userName: widget.userName),      
       RecordatorioScreen(userName: widget.userName),
       InventoryScreen(userName: widget.userName),
       DietaScreen(userName: widget.userName),      
       NotaDeVozScreen(userName: widget.userName),  
-      FarmaciaScreen(userName: widget.userName),    
+      FarmaciaScreen(userName: widget.userName),    // <-- Pantalla de Farmacia agregada
     ];
   }
 
-  // Listado del menú ampliado incluyendo el botón para el Historial
+  // Listado de los 11 ítems del menú superior con sus respectivos íconos
   final List<Map<String, dynamic>> _menuItems = [
     {'label': 'Dashboard', 'icon': Icons.grid_view_rounded},
     {'label': 'Usuario', 'icon': Icons.person_outline_rounded},
     {'label': 'Tratamiento', 'icon': Icons.assignment_outlined},
-    {'label': 'Historial', 'icon': Icons.bar_chart_rounded}, // <-- NUEVA PESTAÑA VISUAL
+    {'label': 'Historial', 'icon': Icons.bar_chart_rounded}, 
     {'label': 'Medicamento', 'icon': Icons.link_rounded},
     {'label': 'Dosis', 'icon': Icons.check_circle_outline_rounded},
     {'label': 'Recordatorio', 'icon': Icons.notifications_none_rounded},
     {'label': 'Inventario', 'icon': Icons.archive_outlined},
     {'label': 'Dieta', 'icon': Icons.restaurant_rounded},
     {'label': 'Nota de Voz', 'icon': Icons.mic_none_rounded},
-    {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded},
+    {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded}, // <-- Botón de Farmacia agregado
   ];
 
   @override
