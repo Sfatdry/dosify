@@ -21,27 +21,28 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
-  late List<Widget> _screens;
+  late List<Widget> _screens; // <-- Déjalo exactamente así, con 'late' y sin 'const'
   final ScrollController _scrollController = ScrollController(); // Controlador para la barrita deslizable
 
-  @override
-  void initState() {
-    super.initState();
-    
-    _screens = [
-      DashboardScreen(userName: widget.userName),
-      ProfileScreen(userName: widget.userName),
-      TratamientoScreen(userName: widget.userName),
-      HistorialScreen(userName: widget.userName),   
-      MedicamentoScreen(userName: widget.userName), 
-      DosisScreen(userName: widget.userName),      
-      RecordatorioScreen(userName: widget.userName),
-      InventoryScreen(userName: widget.userName),
-      DietaScreen(userName: widget.userName),      
-      NotaDeVozScreen(userName: widget.userName),  
-      FarmaciaScreen(userName: widget.userName),    
-    ];
-  }
+ // DENTRO DE TU MAIN_NAVIGATION.DART
+@override
+void initState() {
+  super.initState();
+  
+  _screens = [
+    DashboardScreen(userName: widget.userName),
+    const ProfileScreen(), // <-- ¡MIRA AQUÍ! Déjala limpia, con 'const' y sin el (userName: widget.userName)
+    TratamientoScreen(userName: widget.userName),
+    HistorialScreen(userName: widget.userName),   
+    MedicamentoScreen(userName: widget.userName), 
+    DosisScreen(userName: widget.userName),      
+    RecordatorioScreen(userName: widget.userName),
+    InventoryScreen(userName: widget.userName),
+    DietaScreen(userName: widget.userName),      
+    NotaDeVozScreen(userName: widget.userName),  
+    FarmaciaScreen(userName: widget.userName),    
+  ];
+}
 
   final List<Map<String, dynamic>> _menuItems = [
     {'label': 'Dashboard', 'icon': Icons.grid_view_rounded},
@@ -57,7 +58,6 @@ class _MainNavigationState extends State<MainNavigation> {
     {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded}, 
   ];
 
-  // Funciones para mover la barra con las flechas de guía
   void _scrollLeft() {
     _scrollController.animateTo(
       _scrollController.offset - 150,
@@ -137,13 +137,10 @@ class _MainNavigationState extends State<MainNavigation> {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               children: [
-                // Flecha Izquierda
                 IconButton(
                   icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF64748B)),
                   onPressed: _scrollLeft,
                 ),
-                
-                // El contenedor del Scroll en su tamaño original
                 Expanded(
                   child: SingleChildScrollView(
                     controller: _scrollController,
@@ -158,7 +155,7 @@ class _MainNavigationState extends State<MainNavigation> {
                             onTap: () => setState(() => _selectedIndex = index),
                             child: Container(
                               margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12), // Regresa el padding premium
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                               decoration: BoxDecoration(
                                 color: isSelected ? const Color(0xFF00ACC1) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(30),
@@ -167,14 +164,14 @@ class _MainNavigationState extends State<MainNavigation> {
                                 children: [
                                   Icon(
                                     _menuItems[index]['icon'],
-                                    size: 18, // Tamaño normal de icono
+                                    size: 18,
                                     color: isSelected ? Colors.white : const Color(0xFF64748B),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     _menuItems[index]['label'],
                                     style: TextStyle(
-                                      fontSize: 13, // Tamaño de fuente original
+                                      fontSize: 13,
                                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                                       color: isSelected ? Colors.white : const Color(0xFF64748B),
                                     ),
@@ -188,8 +185,6 @@ class _MainNavigationState extends State<MainNavigation> {
                     ),
                   ),
                 ),
-
-                // Flecha Derecha para que sepa que hay más contenido
                 IconButton(
                   icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF64748B)),
                   onPressed: _scrollRight,

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String userName;
-
-  const ProfileScreen({super.key, required this.userName});
+  const ProfileScreen({super.key}); // Ya no pide parámetros obligatorios, ¡súper limpio!
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -13,61 +10,76 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
-  User? user;
-
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _passwordController;
-
-  bool _obscurePassword = true;
+  
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  
   bool _isLoading = false;
+  bool _isEditingPassword = false;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
-    user = supabase.auth.currentUser;
-    
-    String displayName = user?.userMetadata?['full_name'] ?? widget.userName;
-    
-    _nameController = TextEditingController(text: displayName);
-    _emailController = TextEditingController(text: user?.email ?? "");
-    _passwordController = TextEditingController(text: ""); // La dejamos vacía por seguridad al inicio
+    _cargarDatosUsuario();
   }
 
-  // FUNCIÓN CORREGIDA PARA GUARDAR EN BASE DE DATOS
-  Future<void> _updateProfile() async {
+  // Carga los datos reales del usuario logueado desde Supabase
+  void _cargarDatosUsuario() {
+    final user = supabase.auth.currentUser;
+    if (user != null) {
+      _nameController.text = user.userMetadata?['full_name'] ?? "Usuario";
+      _emailController.text = user.email ?? ""; // Muestra su correo real de registro
+    } else {
+      _nameController.text = "Usuario";
+    }
+  }
+
+  // Actualiza la información del usuario en Supabase Auth
+  Future<void> _guardarCambios() async {
     setState(() => _isLoading = true);
     try {
-      // 1. Actualizar el nombre en los metadatos
+      // 1. Actualizar nombre completo en metadatos
       await supabase.auth.updateUser(
         UserAttributes(
-          data: {'full_name': _nameController.text},
+          data: {'full_name': _nameController.text.trim()},
         ),
       );
 
-      // 2. Si el usuario escribió algo en el campo de contraseña, la actualizamos en Supabase Auth
-      if (_passwordController.text.isNotEmpty && _passwordController.text != "********") {
+      // 2. Si se activó la edición de contraseña y se escribió algo, se actualiza
+      if (_isEditingPassword && _passwordController.text.isNotEmpty) {
+        if (_passwordController.text.length < 8) {
+          throw const AuthException("La contraseña debe tener mínimo 8 caracteres");
+        }
         await supabase.auth.updateUser(
-          UserAttributes(password: _passwordController.text),
+          UserAttributes(password: _passwordController.text.trim()),
         );
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Perfil actualizado con éxito!")),
+          const SnackBar(content: Text("¡Perfil actualizado con éxito!"), backgroundColor: Colors.green),
         );
         setState(() {
-          _passwordController.clear(); // Limpiamos el campo de contraseña tras cambiarla
+          _isEditingPassword = false;
+          _passwordController.clear();
         });
       }
-    } catch (e) {
+    } on AuthException catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error al guardar: $e"), backgroundColor: Colors.red),
+          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error inesperado: $error"), backgroundColor: Colors.red),
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -79,145 +91,162 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _signOut() async {
-    await supabase.auth.signOut();
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
-    }
-  }
-
-  InputDecoration _inputStyle(String label, IconData icon, {Widget? suffixIcon}) {
-    return InputDecoration(
-      hintText: label,
-      prefixIcon: Icon(icon, color: const Color(0xFF00ACC1), size: 20),
-      suffixIcon: suffixIcon,
-      filled: true,
-      fillColor: const Color(0xFFF0F9FF),
-      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFBAE6FD))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFBAE6FD))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFF00ACC1), width: 2)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    const Color primaryCyan = Color(0xFF00ACC1);
+    const Color textCyan = Color(0xFF006064);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 550),
-            padding: const EdgeInsets.all(35),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04), 
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Encabezado de Perfil Estilizado
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: primaryCyan,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: const Icon(Icons.person, color: Colors.white, size: 30),
+                ),
+                const SizedBox(width: 15),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Perfil de Usuario",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textCyan),
+                    ),
+                    Text(
+                      "Administra tu información personal",
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    ),
+                  ],
                 )
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Stack(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: const Color(0xFF00ACC1), borderRadius: BorderRadius.circular(15)),
-                          child: const Icon(Icons.person, color: Colors.white, size: 32),
-                        ),
-                        Positioned(
-                          bottom: 0, right: 0,
-                          child: Container(
-                            width: 13, height: 13,
-                            decoration: BoxDecoration(color: const Color(0xFF00C853), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                          ),
-                        )
-                      ],
-                    ),
-                    const SizedBox(width: 15),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text("Perfil de Usuario", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
-                        Text("Administra tu información personal", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    )
-                  ],
-                ),
-                const SizedBox(height: 35),
+            const SizedBox(height: 40),
 
-                const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
-                const SizedBox(height: 8),
-                TextField(controller: _nameController, decoration: _inputStyle("Nombre", Icons.person_outline)),
-                
-                const SizedBox(height: 24),
-                const Text("Correo electrónico", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _emailController, 
-                  readOnly: true, 
-                  decoration: _inputStyle("Email", Icons.mail_outline),
-                ),
-                
-                const SizedBox(height: 24),
-                const Text("Nueva contraseña (deja en blanco para mantener actual)", style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF006064), fontSize: 14)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _passwordController, 
-                  obscureText: _obscurePassword,
-                  decoration: _inputStyle(
-                    "Escribe una nueva contraseña si deseas cambiarla", 
-                    Icons.lock_outline,
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF00ACC1)),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _updateProfile,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00ACC1),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    ),
-                    child: _isLoading 
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text("Guardar Cambios", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: _signOut,
-                    icon: const Icon(Icons.logout, color: Colors.redAccent, size: 18),
-                    label: const Text("Cerrar Sesión", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 14)),
-                  ),
-                ),
-              ],
+            // 1. Campo Nombre Completo
+            const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 14)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _nameController,
+              decoration: _inputStyle(Icons.person_outline, primaryCyan),
             ),
-          ),
+            const SizedBox(height: 25),
+
+            // 2. Campo Correo Electrónico (Solo lectura por seguridad)
+            const Text("Correo electrónico", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 14)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _emailController,
+              enabled: false, 
+              style: TextStyle(color: Colors.grey.shade700),
+              decoration: _inputStyle(Icons.mail_outline, primaryCyan).copyWith(
+                fillColor: Colors.grey.shade100,
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            // 3. Control Inteligente de Contraseña
+            const Text("Contraseña", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 14)),
+            const SizedBox(height: 8),
+            
+            if (!_isEditingPassword) ...[
+              // Vista Normal: Oculta la clave y ofrece el botón de editar
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: TextEditingController(text: "••••••••••••"),
+                      enabled: false,
+                      decoration: _inputStyle(Icons.lock_outline, primaryCyan),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  TextButton.icon(
+                    onPressed: () => setState(() => _isEditingPassword = true),
+                    icon: const Icon(Icons.edit_rounded, color: primaryCyan, size: 18),
+                    label: const Text("Editar", style: TextStyle(color: primaryCyan, fontWeight: FontWeight.bold)),
+                  )
+                ],
+              ),
+            ] else ...[
+              // Vista de Edición: Habilita el campo para escribir la nueva clave
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: _inputStyle(
+                      Icons.lock_outline, 
+                      primaryCyan,
+                      suffix: IconButton(
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                    ).copyWith(hintText: "Escribe tu nueva contraseña"),
+                  ),
+                  const SizedBox(height: 5),
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _isEditingPassword = false;
+                      _passwordController.clear();
+                    }),
+                    child: const Text("Cancelar cambio", style: TextStyle(color: Colors.redAccent)),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 40),
+
+            // Botón Guardar Cambios
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _guardarCambios,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryCyan,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  elevation: 0,
+                ),
+                child: _isLoading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text("Guardar Cambios", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputStyle(IconData icon, Color primaryColor, {Widget? suffix}) {
+    return InputDecoration(
+      prefixIcon: Icon(icon, color: primaryColor),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: const Color(0xFFF0F9FA), 
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFFB2EBF2)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: primaryColor, width: 2),
+      ),
+      disabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: Colors.grey.shade200),
       ),
     );
   }
