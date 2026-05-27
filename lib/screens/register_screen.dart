@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart'; // <-- Importación necesaria para el formato UUID
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,6 +12,9 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   // Instancia oficial de tu cliente de Supabase
   final SupabaseClient supabase = Supabase.instance.client;
+
+  // Instancia del generador de UUID
+  final Uuid _uuidGenerator = const Uuid();
 
   // Controladores para capturar lo que escribes en la pantalla
   final TextEditingController _nameController = TextEditingController();
@@ -39,12 +43,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Generamos un ID único basado en milisegundos para tu columna 'id'
-      final String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
+      // CORRECCIÓN AQUÍ: Generamos un UUID v4 real que Supabase acepta perfectamente
+      final String secureUuid = _uuidGenerator.v4();
 
       // 2. Insertar los datos directamente en las columnas de tu tabla en Supabase
       await supabase.from('usuario').insert({
-        'id': uniqueId, 
+        'id': secureUuid, // <-- Ya no es un número, ahora es un UUID válido de 36 caracteres
         'nombre': _nameController.text.trim(),
         'email': _emailController.text.trim(),
         'password': _passwordController.text.trim(), // Guarda la contraseña directo
@@ -177,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _registrarUsuarioDirecto, // <-- ¡Listo! Ya calza a la perfección
+                onPressed: _isLoading ? null : _registrarUsuarioDirecto,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryCyan,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
