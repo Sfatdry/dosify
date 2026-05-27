@@ -22,6 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _cargarTratamientosDesdeSupabase(); 
   }
 
+  // Cargar tratamientos desde la base de datos de Supabase
   Future<void> _cargarTratamientosDesdeSupabase() async {
     try {
       setState(() => _isLoadingData = true);
@@ -33,7 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         query = query.eq('usuario_id', userId);
       }
 
-      // Ordenamos por fecha de inicio para que salgan en orden cronológico como en tu imagen
+      // Ordenamos cronológicamente por fecha de inicio como en tu diseño
       final List<dynamic> response = await query.order('fecha_inicio', ascending: true);
 
       setState(() {
@@ -46,6 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  // Eliminar un tratamiento de Supabase por su ID
   Future<void> _eliminarTratamiento(String id) async {
     try {
       await supabase.from('tratamiento').delete().eq('id', id);
@@ -64,6 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  // Navegar a la pantalla de registro y refrescar si devuelve un éxito (true)
   void _irARegistrarTratamiento() async {
     final resultado = await Navigator.push(
       context,
@@ -83,7 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const Color textCyan = Color(0xFF006064);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // El fondo ligeramente gris de tu diseño
+      backgroundColor: const Color(0xFFF8FAFC), // Fondo original ligeramente gris
       appBar: AppBar(
         title: Text(
           "Dosify - Bienvenido ${widget.userName ?? 'Usuario'}", 
@@ -102,12 +105,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 💡 NOTA: Aquí van tus contenedores superiores de "Tratamientos Activos", "Dosis tomadas", etc.
-            // Al igual que las secciones de "Próximas dosis" e "Historial de hoy".
+            // 💡 NOTA: Aquí conservas intactos tus bloques de "Tratamientos activos",
+            // "Dosis tomadas hoy", "Dosis pendientes", "Próximas dosis" e "Historial de hoy".
 
             const SizedBox(height: 20),
             
-            // --- SECCIÓN DE TRATAMIENTOS ACTIVOS (RESTAURADA A TU DISEÑO ORIGINAL) ---
+            // --- SECCIÓN INFERIOR DE TRATAMIENTOS ACTIVOS EN CURSO ---
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               padding: const EdgeInsets.all(20),
@@ -120,7 +123,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     spreadRadius: 2,
                     blurRadius: 10,
                   )
-                ]
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,8 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                         // 🚨 CORREGIDO: Eliminada la palabra "biographies"
-color: const Color(0xFFAB47BC).withOpacity(0.2), // Morado suave del icono// Morado suave del icono
+                          color: const Color(0xFFAB47BC).withOpacity(0.2), // Morado suave corregido
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.assignment_outlined, color: Color(0xFF9C27B0)),
@@ -154,21 +156,24 @@ color: const Color(0xFFAB47BC).withOpacity(0.2), // Morado suave del icono// Mor
                   ),
                   const SizedBox(height: 20),
                   
-                  // Grid Horizontal de Tarjetas Moradas
+                  // Cuadrícula Horizontal de Tarjetas Lavanda
                   _isLoadingData
                       ? const Center(child: CircularProgressIndicator(color: primaryCyan))
                       : _listaTratamientos.isEmpty
                           ? Padding(
                               padding: const EdgeInsets.all(20),
-                              child: Text("No hay tratamientos registrados.", style: TextStyle(color: Colors.grey.shade400)),
+                              child: Text(
+                                "No hay tratamientos registrados.", 
+                                style: TextStyle(color: Colors.grey.shade400),
+                              ),
                             )
                           : SizedBox(
-                              height: 160, // Ajuste perfecto para el alto de tus tarjetas horizontales
+                              height: 160, // Altura ideal para la fila horizontal
                               child: GridView.builder(
                                 scrollDirection: Axis.horizontal,
                                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 1,
-                                  mainAxisExtent: 250, // Ancho de cada tarjeta morada
+                                  mainAxisExtent: 250, // Ancho exacto de cada tarjeta
                                   mainAxisSpacing: 15,
                                 ),
                                 itemCount: _listaTratamientos.length,
@@ -192,8 +197,11 @@ color: const Color(0xFFAB47BC).withOpacity(0.2), // Morado suave del icono// Mor
     );
   }
 
-  // Constructor de tus tarjetas moradas originales con botón de borrar integrado
+  // Constructor de tus tarjetas moradas originales con estado dinámico y botón eliminar
   Widget _buildTarjetaTratamientoOriginal(dynamic tratamiento) {
+    // Obtenemos el estado directo de Supabase o asignamos 'activo' por defecto
+    final String estado = (tratamiento['estado'] ?? 'activo').toString().toLowerCase();
+
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -207,20 +215,25 @@ color: const Color(0xFFAB47BC).withOpacity(0.2), // Morado suave del icono// Mor
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Etiqueta "activo" verde
+              // Etiqueta de Estado Dinámica (Verde para activo, gris para el resto)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFA7F3D0), // Fondo verde menta
+                  color: estado == 'activo' ? const Color(0xFFA7F3D0) : Colors.grey.shade200, 
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  "activo",
-                  style: TextStyle(color: Color(0xFF065F46), fontSize: 11, fontWeight: FontWeight.bold),
+                child: Text(
+                  estado,
+                  style: TextStyle(
+                    color: estado == 'activo' ? const Color(0xFF065F46) : Colors.grey.shade700, 
+                    fontSize: 11, 
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
-              // Nombre del tratamiento
+              
+              // Nombre del medicamento/tratamiento
               Text(
                 tratamiento['nombre'] ?? 'Sin Nombre',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
@@ -228,7 +241,8 @@ color: const Color(0xFFAB47BC).withOpacity(0.2), // Morado suave del icono// Mor
                 overflow: TextOverflow.ellipsis,
               ),
               const Spacer(),
-              // Fechas dinámicas traídas de Supabase
+              
+              // Fechas dinámicas desde Supabase
               Text(
                 "Inicio: ${tratamiento['fecha_inicio']}",
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -239,7 +253,8 @@ color: const Color(0xFFAB47BC).withOpacity(0.2), // Morado suave del icono// Mor
               ),
             ],
           ),
-          // Botón de eliminar en la esquina superior derecha de la tarjeta
+          
+          // Botón sutil de eliminación (Círculo rojo suave con cruz) en la esquina derecha
           Positioned(
             top: 0,
             right: 0,

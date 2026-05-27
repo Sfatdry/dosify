@@ -18,6 +18,10 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
 
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
+  
+  // 🚨 NUEVO: Variable para controlar el estado seleccionado (Por defecto 'Activo')
+  String _estadoSeleccionado = 'Activo'; 
+
   bool _isLoadingUser = true;
   bool _isSaving = false;
   String? _currentUserId; 
@@ -112,13 +116,13 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
         'nombre': _nombreController.text.trim(), 
         'fecha_inicio': DateFormat('yyyy-MM-dd').format(_fechaInicio!),
         'fecha_fin': DateFormat('yyyy-MM-dd').format(_fechaFin!),
-        'estado': 'Activo',
+        // 🚨 CORREGIDO: Ahora guarda el estado que tú elijas en la pantalla
+        'estado': _estadoSeleccionado, 
       };
 
       await supabase.from('tratamiento').insert(mapTratamiento);
 
       if (mounted) {
-        // Alerta Verde Plana sin fallos
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Tratamiento guardado con éxito"),
@@ -126,7 +130,6 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
           ),
         );
 
-        // BLINDAJE ANTI PANTALLA BLANCA: Verifica el árbol de navegación antes de hacer pop
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop(true);
         } else {
@@ -186,6 +189,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   ),
                   const SizedBox(height: 40),
 
+                  // --- CAMPO: NOMBRE ---
                   const Text("Nombre del tratamiento", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
                   const SizedBox(height: 10),
                   TextField(
@@ -209,6 +213,41 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   ),
                   const SizedBox(height: 25),
 
+                  // 🚨 NUEVA SECCIÓN: ESTADO DEL TRATAMIENTO 🚨
+                  const Text("Estado del tratamiento", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: _estadoSeleccionado,
+                    dropdownColor: Colors.white,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.toggle_on_outlined, color: primaryCyan, size: 22),
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(color: primaryCyan, width: 2),
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Activo', child: Text('Activo', style: TextStyle(fontSize: 14, color: Colors.black87))),
+                      DropdownMenuItem(value: 'Inactivo', child: Text('Inactivo', style: TextStyle(fontSize: 14, color: Colors.black87))),
+                    ],
+                    onChanged: (String? nuevoValor) {
+                      if (nuevoValor != null) {
+                        setState(() {
+                          _estadoSeleccionado = nuevoValor;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 25),
+
+                  // --- CAMPO: FECHA INICIO ---
                   const Text("Fecha de inicio", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
                   const SizedBox(height: 10),
                   _buildDatePickerButton(
@@ -219,6 +258,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   ),
                   const SizedBox(height: 25),
 
+                  // --- CAMPO: FECHA FIN ---
                   const Text("Fecha de finalización", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
                   const SizedBox(height: 10),
                   _buildDatePickerButton(
@@ -229,6 +269,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   ),
                   const SizedBox(height: 45),
 
+                  // --- BOTÓN REGISTRAR ---
                   SizedBox(
                     width: double.infinity,
                     height: 55,
