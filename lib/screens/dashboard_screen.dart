@@ -22,12 +22,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _cargarTratamientosDesdeSupabase(); 
   }
 
+  // Cargar tratamientos de la base de datos
   Future<void> _cargarTratamientosDesdeSupabase() async {
     try {
       setState(() => _isLoadingData = true);
       
       final String? userId = supabase.auth.currentUser?.id;
-
       PostgrestFilterBuilder query = supabase.from('tratamiento').select();
       
       if (userId != null) {
@@ -40,9 +40,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _listaTratamientos = response;
       });
     } catch (e) {
-      debugPrint("Error cargando tratamientos en el Dashboard: $e");
+      debugPrint("Error cargando tratamientos: $e");
     } finally {
       setState(() => _isLoadingData = false);
+    }
+  }
+
+  // NUEVA FUNCIÓN: Eliminar tratamiento directamente
+  Future<void> _eliminarTratamiento(String id) async {
+    try {
+      await supabase.from('tratamiento').delete().eq('id', id);
+      
+      // Avisamos que se eliminó correctamente
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Tratamiento eliminado"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+      // Recargamos la lista inmediatamente
+      _cargarTratamientosDesdeSupabase();
+    } catch (e) {
+      debugPrint("Error al eliminar tratamiento: $e");
     }
   }
 
@@ -122,13 +143,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       itemBuilder: (context, index) {
         final tratamiento = _listaTratamientos[index];
         
+        // DISEÑO ORIGINAL RESTAURADO (Sin problemas de borders ni const)
         return Card(
           elevation: 0,
           margin: const EdgeInsets.symmetric(vertical: 10),
           color: const Color(0xFFF8FAFC),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
-            side: BorderSide(color: Colors.grey.shade200), 
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -147,16 +168,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               ),
             ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE0F7FA),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                "Activo",
-                style: TextStyle(color: Color(0xFF00838F), fontSize: 12, fontWeight: FontWeight.bold),
-              ),
+            // BOTÓN DE ELIMINAR AÑADIDO
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
+              onPressed: () => _eliminarTratamiento(tratamiento['id'].toString()),
             ),
           ),
         );

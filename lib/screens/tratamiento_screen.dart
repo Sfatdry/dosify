@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 
 class TratamientoScreen extends StatefulWidget {
   final String? userName; 
-
   const TratamientoScreen({super.key, this.userName});
 
   @override
@@ -124,9 +123,10 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
       await supabase.from('tratamiento').insert(mapTratamiento);
 
       if (mounted) {
+        // MENSAJE EN VERDE CORREGIDO
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("¡Tratamiento registrado con éxito!"),
+            content: Text("Tratamiento guardado con éxito"),
             backgroundColor: Colors.green,
           ),
         );
@@ -137,7 +137,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Error al registrar en Supabase: $error"),
+            content: Text("Error al registrar: $error"),
             backgroundColor: Colors.red,
           ),
         );
@@ -199,11 +199,11 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide(color: primaryCyan, width: 2),
+                        borderSide: const BorderSide(color: primaryCyan, width: 2),
                       ),
                     ),
                   ),
@@ -270,11 +270,9 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
       borderRadius: BorderRadius.circular(15),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-        // 🚨 CORREGIDO: Se quitó el 'const' decorador que impedía compilar tonalidades de gris personalizados
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade200), 
         ),
         child: Row(
           children: [
