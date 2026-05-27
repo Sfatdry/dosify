@@ -14,12 +14,10 @@ class TratamientoScreen extends StatefulWidget {
 class _TratamientoScreenState extends State<TratamientoScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
   final Uuid _uuidGenerator = const Uuid();
-
   final TextEditingController _nombreController = TextEditingController();
 
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
-
   bool _isLoadingUser = true;
   bool _isSaving = false;
   String? _currentUserId; 
@@ -55,12 +53,9 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
 
   Future<void> _seleccionarFecha(BuildContext context, bool esFechaInicio) async {
     final DateTime hoy = DateTime.now();
-    
     final DateTime? seleccionado = await showDatePicker(
       context: context,
-      initialDate: esFechaInicio 
-          ? (_fechaInicio ?? hoy) 
-          : (_fechaFin ?? _fechaInicio ?? hoy),
+      initialDate: esFechaInicio ? (_fechaInicio ?? hoy) : (_fechaFin ?? _fechaInicio ?? hoy),
       firstDate: esFechaInicio ? hoy : (_fechaInicio ?? hoy), 
       lastDate: DateTime(hoy.year + 5), 
       builder: (context, child) {
@@ -123,7 +118,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
       await supabase.from('tratamiento').insert(mapTratamiento);
 
       if (mounted) {
-        // MENSAJE EN VERDE CORREGIDO
+        // Alerta Verde Plana sin fallos
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Tratamiento guardado con éxito"),
@@ -131,7 +126,12 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
           ),
         );
 
-        Navigator.of(context).pop(true);
+        // BLINDAJE ANTI PANTALLA BLANCA: Verifica el árbol de navegación antes de hacer pop
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(true);
+        } else {
+          Navigator.of(context).pushReplacementNamed('/');
+        }
       }
     } catch (error) {
       if (mounted) {
@@ -212,9 +212,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   const Text("Fecha de inicio", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
                   const SizedBox(height: 10),
                   _buildDatePickerButton(
-                    texto: _fechaInicio == null 
-                        ? "Seleccionar fecha de inicio" 
-                        : DateFormat('dd / MM / yyyy').format(_fechaInicio!),
+                    texto: _fechaInicio == null ? "Seleccionar fecha de inicio" : DateFormat('dd / MM / yyyy').format(_fechaInicio!),
                     icon: Icons.calendar_today_rounded,
                     color: primaryCyan,
                     onTap: () => _seleccionarFecha(context, true),
@@ -224,14 +222,10 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                   const Text("Fecha de finalización", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
                   const SizedBox(height: 10),
                   _buildDatePickerButton(
-                    texto: _fechaFin == null 
-                        ? "Seleccionar fecha de fin" 
-                        : DateFormat('dd / MM / yyyy').format(_fechaFin!),
+                    texto: _fechaFin == null ? "Seleccionar fecha de fin" : DateFormat('dd / MM / yyyy').format(_fechaFin!),
                     icon: Icons.calendar_month_rounded,
                     color: primaryCyan,
-                    onTap: _fechaInicio == null 
-                        ? null 
-                        : () => _seleccionarFecha(context, false),
+                    onTap: _fechaInicio == null ? null : () => _seleccionarFecha(context, false),
                   ),
                   const SizedBox(height: 45),
 
@@ -281,9 +275,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
             Text(
               texto,
               style: TextStyle(
-                color: onTap == null 
-                    ? Colors.grey.shade400 
-                    : (_fechaInicio != null || _fechaFin != null ? Colors.black87 : Colors.grey.shade500),
+                color: onTap == null ? Colors.grey.shade400 : (_fechaInicio != null || _fechaFin != null ? Colors.black87 : Colors.grey.shade500),
                 fontSize: 14,
               ),
             ),

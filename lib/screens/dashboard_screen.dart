@@ -22,7 +22,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _cargarTratamientosDesdeSupabase(); 
   }
 
-  // Cargar tratamientos de la base de datos
   Future<void> _cargarTratamientosDesdeSupabase() async {
     try {
       setState(() => _isLoadingData = true);
@@ -34,7 +33,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         query = query.eq('usuario_id', userId);
       }
 
-      final List<dynamic> response = await query.order('fecha_inicio', ascending: false);
+      // Ordenamos por fecha de inicio para que salgan en orden cronológico como en tu imagen
+      final List<dynamic> response = await query.order('fecha_inicio', ascending: true);
 
       setState(() {
         _listaTratamientos = response;
@@ -46,21 +46,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // NUEVA FUNCIÓN: Eliminar tratamiento directamente
   Future<void> _eliminarTratamiento(String id) async {
     try {
       await supabase.from('tratamiento').delete().eq('id', id);
       
-      // Avisamos que se eliminó correctamente
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Tratamiento eliminado"),
+            content: Text("Tratamiento eliminado con éxito"),
             backgroundColor: Colors.redAccent,
           ),
         );
       }
-      // Recargamos la lista inmediatamente
       _cargarTratamientosDesdeSupabase();
     } catch (e) {
       debugPrint("Error al eliminar tratamiento: $e");
@@ -86,7 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const Color textCyan = Color(0xFF006064);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC), // El fondo ligeramente gris de tu diseño
       appBar: AppBar(
         title: Text(
           "Dosify - Bienvenido ${widget.userName ?? 'Usuario'}", 
@@ -101,12 +98,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
           )
         ],
       ),
-      body: _isLoadingData
-          ? const Center(child: CircularProgressIndicator(color: primaryCyan))
-          : _listaTratamientos.isEmpty
-              ? _buildDashboardVacio()
-              : _buildListaDeTratamientos(),
-      
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 💡 NOTA: Aquí van tus contenedores superiores de "Tratamientos Activos", "Dosis tomadas", etc.
+            // Al igual que las secciones de "Próximas dosis" e "Historial de hoy".
+
+            const SizedBox(height: 20),
+            
+            // --- SECCIÓN DE TRATAMIENTOS ACTIVOS (RESTAURADA A TU DISEÑO ORIGINAL) ---
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.05),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                  )
+                ]
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                         // 🚨 CORREGIDO: Eliminada la palabra "biographies"
+color: const Color(0xFFAB47BC).withOpacity(0.2), // Morado suave del icono// Morado suave del icono
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.assignment_outlined, color: Color(0xFF9C27B0)),
+                      ),
+                      const SizedBox(width: 15),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Tratamientos activos",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                          ),
+                          Text(
+                            "En curso",
+                            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Grid Horizontal de Tarjetas Moradas
+                  _isLoadingData
+                      ? const Center(child: CircularProgressIndicator(color: primaryCyan))
+                      : _listaTratamientos.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Text("No hay tratamientos registrados.", style: TextStyle(color: Colors.grey.shade400)),
+                            )
+                          : SizedBox(
+                              height: 160, // Ajuste perfecto para el alto de tus tarjetas horizontales
+                              child: GridView.builder(
+                                scrollDirection: Axis.horizontal,
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 1,
+                                  mainAxisExtent: 250, // Ancho de cada tarjeta morada
+                                  mainAxisSpacing: 15,
+                                ),
+                                itemCount: _listaTratamientos.length,
+                                itemBuilder: (context, index) {
+                                  final tratamiento = _listaTratamientos[index];
+                                  return _buildTarjetaTratamientoOriginal(tratamiento);
+                                },
+                              ),
+                            ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryCyan,
         onPressed: _irARegistrarTratamiento, 
@@ -115,67 +192,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildDashboardVacio() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  // Constructor de tus tarjetas moradas originales con botón de borrar integrado
+  Widget _buildTarjetaTratamientoOriginal(dynamic tratamiento) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3E8FF).withOpacity(0.5), // Tu fondo morado claro original
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: const Color(0xFFE9D5FF), width: 1),
+      ),
+      child: Stack(
         children: [
-          Icon(Icons.medication_liquid_sharp, size: 80, color: Colors.grey.shade300),
-          const SizedBox(height: 20),
-          Text(
-            "No tienes tratamientos activos",
-            style: TextStyle(fontSize: 18, color: Colors.grey.shade500, fontWeight: FontWeight.bold),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Etiqueta "activo" verde
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFA7F3D0), // Fondo verde menta
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  "activo",
+                  style: TextStyle(color: Color(0xFF065F46), fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Nombre del tratamiento
+              Text(
+                tratamiento['nombre'] ?? 'Sin Nombre',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const Spacer(),
+              // Fechas dinámicas traídas de Supabase
+              Text(
+                "Inicio: ${tratamiento['fecha_inicio']}",
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              Text(
+                "Fin: ${tratamiento['fecha_fin']}",
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ],
           ),
-          const SizedBox(height: 5),
-          Text(
-            "Toca el botón '+' para agregar uno nuevo.",
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+          // Botón de eliminar en la esquina superior derecha de la tarjeta
+          Positioned(
+            top: 0,
+            right: 0,
+            child: InkWell(
+              onTap: () => _eliminarTratamiento(tratamiento['id'].toString()),
+              child: Icon(Icons.disabled_by_default_rounded, color: Colors.red.shade300, size: 22),
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildListaDeTratamientos() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      itemCount: _listaTratamientos.length,
-      itemBuilder: (context, index) {
-        final tratamiento = _listaTratamientos[index];
-        
-        // DISEÑO ORIGINAL RESTAURADO (Sin problemas de borders ni const)
-        return Card(
-          elevation: 0,
-          margin: const EdgeInsets.symmetric(vertical: 10),
-          color: const Color(0xFFF8FAFC),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-            leading: const CircleAvatar(
-              backgroundColor: Color(0xFF00ACC1),
-              child: Icon(Icons.medical_services_outlined, color: Colors.white),
-            ),
-            title: Text(
-              tratamiento['nombre'] ?? 'Sin Nombre',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 16),
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 5),
-              child: Text(
-                "Inicio: ${tratamiento['fecha_inicio']}  |  Fin: ${tratamiento['fecha_fin']}",
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-              ),
-            ),
-            // BOTÓN DE ELIMINAR AÑADIDO
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
-              onPressed: () => _eliminarTratamiento(tratamiento['id'].toString()),
-            ),
-          ),
-        );
-      },
     );
   }
 }
