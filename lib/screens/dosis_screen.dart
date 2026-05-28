@@ -15,10 +15,12 @@ class _DosisScreenState extends State<DosisScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
   final Uuid _uuidGenerator = const Uuid();
 
-  // Variables de Estado
-  String _selectedEstado = 'Pendiente';
-  List<dynamic> _tratamientosActivos = [];
-  String? _tratamientoSeleccionadoId;
+  // Estado del botón seleccionado (en minúsculas por el CHECK constraint)
+  String _selectedEstado = 'pendiente';
+  
+  // CORRECCIÓN: Lista de medicamentos base en vez de tratamientos
+  List<dynamic> _medicamentosDisponibles = [];
+  String? _medicamentoSeleccionadoId;
   
   DateTime? _fechaSeleccionada;
   TimeOfDay? _horaSeleccionada;
@@ -26,42 +28,41 @@ class _DosisScreenState extends State<DosisScreen> {
   bool _isLoadingData = true;
   bool _isSaving = false;
   
-  // Controladores de texto visuales
   final TextEditingController _fechaController = TextEditingController();
   final TextEditingController _horaController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _cargarTratamientosDesdeSupabase();
+    _cargarMedicamentosDesdeSupabase();
   }
 
-  // Carga los medicamentos de la tabla tratamiento para llenar el selector
-  Future<void> _cargarTratamientosDesdeSupabase() async {
+  // CORRECCIÓN: Apuntar directamente a la tabla 'medicamento' para cumplir la clave foránea
+  Future<void> _cargarMedicamentosDesdeSupabase() async {
     try {
       setState(() => _isLoadingData = true);
       
+      // Consultamos la tabla 'medicamento' que es la que requiere la llave foránea
       final List<dynamic> response = await supabase
-          .from('tratamiento')
+          .from('medicamento')
           .select('id, nombre')
           .order('nombre', ascending: true);
 
       setState(() {
-        _tratamientosActivos = response;
-        if (_tratamientosActivos.isNotEmpty) {
-          _tratamientoSeleccionadoId = _tratamientosActivos.first['id'].toString();
+        _medicamentosDisponibles = response;
+        if (_medicamentosDisponibles.isNotEmpty) {
+          _medicamentoSeleccionadoId = _medicamentosDisponibles.first['id'].toString();
         }
       });
     } catch (e) {
-      debugPrint("Error cargando tratamientos en dosis: $e");
+      debugPrint("Error cargando la lista de medicamentos: $e");
     } finally {
       setState(() => _isLoadingData = false);
     }
   }
 
-  // Lógica para estructurar los datos y subirlos a Supabase
   Future<void> _guardarDosisEnBaseDeDatos() async {
-    if (_tratamientoSeleccionadoId == null || _fechaSeleccionada == null || _horaSeleccionada == null) {
+    if (_medicamentoSeleccionadoId == null || _fechaSeleccionada == null || _horaSeleccionada == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Por favor, completa todos los campos"), backgroundColor: Colors.orange),
       );
@@ -71,7 +72,6 @@ class _DosisScreenState extends State<DosisScreen> {
     setState(() => _isSaving = true);
 
     try {
-      // Unimos la fecha y hora nativas en un solo objeto DateTime compatible con Supabase
       final DateTime fechaHoraFinal = DateTime(
         _fechaSeleccionada!.year,
         _fechaSeleccionada!.month,
@@ -82,12 +82,12 @@ class _DosisScreenState extends State<DosisScreen> {
 
       final String dosisId = _uuidGenerator.v4();
 
-      // Mapeo exacto según las columnas de tu BD: id, medicamento_id, fecha_hora, estado
+      // Mapeo enviando un medicamento_id válido que existe en la tabla 'medicamento'
       final mapDosis = {
         'id': dosisId,
-        'medicamento_id': _tratamientoSeleccionadoId,
+        'medicamento_id': _medicamentoSeleccionadoId, // ID verificado en la tabla de medicamentos
         'fecha_hora': fechaHoraFinal.toIso8601String(),
-        'estado': _selectedEstado,
+        'estado': _selectedEstado.toLowerCase().trim(), 
       };
 
       await supabase.from('dosis').insert(mapDosis);
@@ -95,19 +95,18 @@ class _DosisScreenState extends State<DosisScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("¡Dosis guardada con éxito!"), 
+            content: Text("¡Dosis registrada con éxito en la base de datos!"), 
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
         );
 
-        // Limpieza de campos en la misma interfaz (Sin pantallas en blanco)
         setState(() {
           _fechaController.clear();
           _horaController.clear();
           _fechaSeleccionada = null;
           _horaSeleccionada = null;
-          _selectedEstado = 'Pendiente';
+          _selectedEstado = 'pendiente';
         });
       }
     } catch (error) {
@@ -157,7 +156,6 @@ class _DosisScreenState extends State<DosisScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // 1. ENCABEZADO DE LA TARJETA
                       Row(
                         children: [
                           Container(
@@ -177,16 +175,18 @@ class _DosisScreenState extends State<DosisScreen> {
                       ),
                       const SizedBox(height: 35),
 
-                      // NUEVO CAMPO: SELECCIÓN DE MEDICAMENTO REAL
                       const Text(
-                        "Medicamento / Tratamiento", 
+                        "Seleccionar Medicamento", 
                         style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
                       ),
                       const SizedBox(height: 8),
-                      _tratamientosActivos.isEmpty
-                          ? const Text("No tienes tratamientos creados todavía.", style: TextStyle(color: Colors.red, fontSize: 13))
+                      _medicamentosDisponibles.isEmpty
+                          ? const Text(
+                              "No hay medicamentos en la tabla 'medicamento'. Agrega uno primero.", 
+                              style: TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.w500)
+                            )
                           : DropdownButtonFormField<String>(
-                              value: _tratamientoSeleccionadoId,
+                              value: _medicamentoSeleccionadoId,
                               dropdownColor: Colors.white,
                               decoration: InputDecoration(
                                 prefixIcon: const Icon(Icons.medical_services_outlined, color: primaryCyan, size: 20),
@@ -194,17 +194,16 @@ class _DosisScreenState extends State<DosisScreen> {
                                 fillColor: const Color(0xFFF0F9FF),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
                               ),
-                              items: _tratamientosActivos.map((t) {
+                              items: _medicamentosDisponibles.map((m) {
                                 return DropdownMenuItem<String>(
-                                  value: t['id'].toString(),
-                                  child: Text(t['nombre'] ?? 'Sin nombre'),
+                                  value: m['id'].toString(),
+                                  child: Text(m['nombre'] ?? 'Sin nombre'),
                                 );
                               }).toList(),
-                              onChanged: (value) => setState(() => _tratamientoSeleccionadoId = value),
+                              onChanged: (value) => setState(() => _medicamentoSeleccionadoId = value),
                             ),
                       const SizedBox(height: 24),
 
-                      // 2. CAMPO: FECHA PROGRAMADA
                       const Text(
                         "Fecha Programada", 
                         style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
@@ -237,7 +236,6 @@ class _DosisScreenState extends State<DosisScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // 3. CAMPO: HORA PROGRAMADA
                       const Text(
                         "Hora Programada", 
                         style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
@@ -268,7 +266,6 @@ class _DosisScreenState extends State<DosisScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // 4. SECCIÓN: ESTADO (Selector Grid de 2x2)
                       const Text(
                         "Estado", 
                         style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
@@ -282,19 +279,18 @@ class _DosisScreenState extends State<DosisScreen> {
                         mainAxisSpacing: 15,
                         childAspectRatio: 2.5,
                         children: [
-                          _buildEstadoButton("Pendiente", const Color(0xFFE0F2FE), const Color(0xFF0369A1)),
-                          _buildEstadoButton("Tomada", const Color(0xFFDCFCE7), const Color(0xFF15803D)),
-                          _buildEstadoButton("Omitida", const Color(0xFFFEE2E2), const Color(0xFFB91C1C)),
-                          _buildEstadoButton("Tarde", const Color(0xFFFEF3C7), const Color(0xFFB45309)),
+                          _buildEstadoButton("pendiente", "Pendiente", const Color(0xFFE0F2FE), const Color(0xFF0369A1)),
+                          _buildEstadoButton("tomada", "Tomada", const Color(0xFFDCFCE7), const Color(0xFF15803D)),
+                          _buildEstadoButton("omitida", "Omitida", const Color(0xFFFEE2E2), const Color(0xFFB91C1C)),
+                          _buildEstadoButton("tarde", "Tarde", const Color(0xFFFEF3C7), const Color(0xFFB45309)),
                         ],
                       ),
                       const SizedBox(height: 35),
 
-                      // 5. BOTÓN DE GUARDAR ACCIÓN CONECTADO A SUPABASE
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _isSaving || _tratamientosActivos.isEmpty ? null : _guardarDosisEnBaseDeDatos,
+                          onPressed: _isSaving || _medicamentosDisponibles.isEmpty ? null : _guardarDosisEnBaseDeDatos,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryCyan,
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -317,13 +313,13 @@ class _DosisScreenState extends State<DosisScreen> {
     );
   }
 
-  Widget _buildEstadoButton(String estado, Color activeBgColor, Color activeTextColor) {
-    bool isSelected = _selectedEstado == estado;
+  Widget _buildEstadoButton(String valorInterno, String textoVisual, Color activeBgColor, Color activeTextColor) {
+    bool isSelected = _selectedEstado == valorInterno;
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedEstado = estado;
+          _selectedEstado = valorInterno;
         });
       },
       child: Container(
@@ -337,7 +333,7 @@ class _DosisScreenState extends State<DosisScreen> {
           ),
         ),
         child: Text(
-          estado,
+          textoVisual,
           style: TextStyle(
             color: isSelected ? activeTextColor : const Color(0xFF64748B),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
