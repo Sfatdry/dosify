@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 class MedicamentoScreen extends StatefulWidget {
   final String userName;
@@ -10,12 +12,100 @@ class MedicamentoScreen extends StatefulWidget {
 }
 
 class _MedicamentoScreenState extends State<MedicamentoScreen> {
-  // Variables para controlar el formulario inferior
-  bool _isCritico = true;
-  final TextEditingController _nombreController = TextEditingController(text: "Amoxicilina");
-  final TextEditingController _dosisController = TextEditingController(text: "500mg");
-  final TextEditingController _frecuenciaController = TextEditingController(text: "8");
-  final TextEditingController _duracionController = TextEditingController(text: "7");
+  final SupabaseClient supabase = Supabase.instance.client;
+  final Uuid _uuidGenerator = const Uuid();
+
+  // Variables para controlar el formulario
+  bool _isCritico = false;
+  bool _isSaving = false;
+
+  final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _dosisController = TextEditingController();
+  final TextEditingController _frecuenciaController = TextEditingController();
+  final TextEditingController _duracionController = TextEditingController();
+
+  String? _selectedMedId;
+
+  // FUNCIÓN PARA GUARDAR EN SUPABASE (Tiempo real garantizado)
+  Future<void> _guardarMedicamento() async {
+    if (_nombreController.text.trim().isEmpty || 
+        _dosisController.text.trim().isEmpty || 
+        _frecuenciaController.text.trim().isEmpty || 
+        _duracionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Por favor, completa todos los campos"), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final String nuevoId = _uuidGenerator.v4();
+
+      final mapMedicamento = {
+        'id': nuevoId,
+        'nombre': _nombreController.text.trim(),
+        'dosis': _dosisController.text.trim(),
+        'frecuencia_horas': int.tryParse(_frecuenciaController.text.trim()) ?? 8,
+        'duracion_dias': int.tryParse(_duracionController.text.trim()) ?? 7,
+        'es_critico': _isCritico,
+        'tratamiento_id': null, 
+      };
+
+      await supabase.from('medicamento').insert(mapMedicamento);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("¡Medicamento guardado con éxito!"), 
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        _limpiarFormulario();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error al guardar: $e"), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  // FUNCIÓN PARA ELIMINAR EL MEDICAMENTO
+  Future<void> _eliminarMedicamento(String id) async {
+    try {
+      await supabase.from('medicamento').delete().eq('id', id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Medicamento eliminado de la base de datos"), backgroundColor: Colors.blueGrey),
+        );
+        if (_selectedMedId == id) {
+          setState(() => _selectedMedId = null);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("No se pudo eliminar: $e"), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  void _limpiarFormulario() {
+    _nombreController.clear();
+    _dosisController.clear();
+    _frecuenciaController.clear();
+    _duracionController.clear();
+    setState(() {
+      _isCritico = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -37,25 +127,79 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. GRID / FILA DE TARJETAS DE MEDICAMENTOS (Scroll Horizontal)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildMedOverviewCard("Amoxicilina", "500mg", "Cada 8h", "21 unidades", Colors.cyan, false, isSelected: true),
-                  const SizedBox(width: 20),
-                  _buildMedOverviewCard("Losartán", "50 mg", "Cada 24h", "28 unidades", Colors.pink, true, isSelected: false),
-                  const SizedBox(width: 20),
-                  _buildMedOverviewCard("Metformina", "850mg", "Cada 12h", "60 unidades", Colors.purple, true, isSelected: false),
-                ],
-              ),
+            // 1. CAROUSEL DINÁMICO ESCUCHANDO TU TABLA REAL
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: supabase.from('medicamento').stream(primaryKey: ['id']).order('nombre', ascending: true),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: primaryCyan));
+                }
+                
+                final medicamentos = snapshot.data ?? [];
+
+                if (medicamentos.isEmpty) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(25),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        "No hay medicamentos agregados todavía.",
+                        style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  );
+                }
+
+                // Control dinámico inteligente de selección de tarjetas
+                final listaIds = medicamentos.map((m) => m['id'].toString()).toList();
+                if (_selectedMedId == null || !listaIds.contains(_selectedMedId)) {
+                  // Evita hacer un setState directo durante el build asignándolo en segundo plano
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && medicamentos.isNotEmpty) {
+                      setState(() => _selectedMedId = medicamentos.first['id'].toString());
+                    }
+                  });
+                }
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: medicamentos.map((med) {
+                      final String id = med['id'].toString();
+                      final String nombre = med['nombre'] ?? 'Sin nombre';
+                      final String dosis = med['dosis'] ?? '';
+                      final String frecuencia = "Cada ${med['frecuencia_horas'] ?? 8}h";
+                      final String duracion = "${med['duracion_dias'] ?? 7} días";
+                      final bool esCritico = med['es_critico'] == true;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 20),
+                        child: _buildMedOverviewCard(
+                          id,
+                          nombre,
+                          dosis,
+                          frecuencia,
+                          duracion,
+                          primaryCyan,
+                          esCritico,
+                          isSelected: _selectedMedId == id,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 40),
 
-            // 2. CONTENEDOR PRINCIPAL: DETALLES DEL MEDICAMENTO (FORMULARIO COMPLETAMENTE CENTRADO)
+            // 2. FORMULARIO DE DETALLES
             Center(
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 550), // Evita que se estire en entorno Web/Tablet
+                constraints: const BoxConstraints(maxWidth: 550),
                 padding: const EdgeInsets.all(30),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -67,7 +211,6 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Encabezado de la configuración
                     Row(
                       children: [
                         Container(
@@ -91,17 +234,14 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                     ),
                     const SizedBox(height: 35),
 
-                    // Campo: Nombre del medicamento
                     _buildLabel("Nombre del medicamento"),
-                    _buildTextField(_nombreController, Icons.link, primaryCyan),
+                    _buildTextField(_nombreController, Icons.medication_outlined, primaryCyan, "Ej: Amoxicilina", TextInputType.text),
                     const SizedBox(height: 25),
 
-                    // Campo: Dosis
                     _buildLabel("Dosis"),
-                    _buildTextField(_dosisController, null, primaryCyan),
+                    _buildTextField(_dosisController, Icons.blur_on, primaryCyan, "Ej: 500mg", TextInputType.text),
                     const SizedBox(height: 25),
 
-                    // Fila dividida: Frecuencia y Duración
                     Row(
                       children: [
                         Expanded(
@@ -109,7 +249,7 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildLabel("Frecuencia (horas)"),
-                              _buildTextField(_frecuenciaController, Icons.access_time, primaryCyan),
+                              _buildTextField(_frecuenciaController, Icons.access_time, primaryCyan, "Ej: 8", TextInputType.number),
                             ],
                           ),
                         ),
@@ -119,7 +259,7 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildLabel("Duración (días)"),
-                              _buildTextField(_duracionController, Icons.calendar_today_outlined, primaryCyan),
+                              _buildTextField(_duracionController, Icons.calendar_today_outlined, primaryCyan, "Ej: 7", TextInputType.number),
                             ],
                           ),
                         ),
@@ -127,7 +267,6 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Banner interactivo: Medicamento Crítico
                     GestureDetector(
                       onTap: () {
                         setState(() {
@@ -165,7 +304,7 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: const [
                                 Text("Medicamento crítico", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 15)),
-                                Text("Requiere adherencia estricta", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                                Text("Requiere adherence estricta", style: TextStyle(color: Colors.grey, fontSize: 13)),
                               ],
                             )
                           ],
@@ -174,38 +313,35 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                     ),
                     const SizedBox(height: 35),
 
-                    // Botones de Acción Inferiores (Guardar y Cancelar)
                     Row(
                       children: [
                         Expanded(
                           flex: 3,
                           child: ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Medicamento guardado con éxito")),
-                              );
-                            },
+                            onPressed: _isSaving ? null : _guardarMedicamento,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryCyan,
                               padding: const EdgeInsets.symmetric(vertical: 18),
                               elevation: 0,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                             ),
-                            child: const Text("Guardar Medicamento", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                            child: _isSaving 
+                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Text("Guardar Medicamento", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                           ),
                         ),
                         const SizedBox(width: 15),
                         Expanded(
                           flex: 1,
                           child: OutlinedButton(
-                            onPressed: () {},
+                            onPressed: _limpiarFormulario,
                             style: OutlinedButton.styleFrom(
                               backgroundColor: const Color(0xFFF1F5F9),
                               side: BorderSide.none,
                               padding: const EdgeInsets.symmetric(vertical: 18),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                             ),
-                            child: const Text("Cancelar", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 16)),
+                            child: const Text("Limpiar", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 16)),
                           ),
                         ),
                       ],
@@ -229,10 +365,13 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, IconData? prefixIcon, Color activeColor) {
+  Widget _buildTextField(TextEditingController controller, IconData? prefixIcon, Color activeColor, String hint, TextInputType type) {
     return TextField(
       controller: controller,
+      keyboardType: type,
       decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
         prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: activeColor, size: 20) : null,
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
@@ -249,52 +388,75 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
     );
   }
 
-  Widget _buildMedOverviewCard(String name, String mg, String freq, String units, Color iconColor, bool isCritico, {required bool isSelected}) {
-    return Container(
-      width: 280,
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(
-          color: isSelected ? const Color(0xFF00ACC1) : Colors.transparent,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CircleAvatar(
-                backgroundColor: iconColor.withOpacity(0.1),
-                child: Icon(Icons.medication, color: iconColor, size: 20),
-              ),
-              if (isCritico)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFFFE4E6), borderRadius: BorderRadius.circular(12)),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.bolt, color: Colors.pink, size: 12),
-                      SizedBox(width: 4),
-                      Text("Crítico", style: TextStyle(color: Colors.pink, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                )
-            ],
+  Widget _buildMedOverviewCard(String id, String name, String mg, String freq, String units, Color iconColor, bool isCritico, {required bool isSelected}) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedMedId = id;
+        });
+      },
+      child: Container(
+        width: 280,
+        padding: const EdgeInsets.all(25),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF00ACC1) : Colors.transparent,
+            width: 2,
           ),
-          const SizedBox(height: 20),
-          Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
-          const SizedBox(height: 15),
-          _rowItem(Icons.blur_on, mg),
-          _rowItem(Icons.access_time, freq),
-          _rowItem(Icons.inventory_2_outlined, units),
-        ],
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CircleAvatar(
+                  backgroundColor: iconColor.withOpacity(0.1),
+                  child: Icon(Icons.medication, color: iconColor, size: 20),
+                ),
+                Row(
+                  children: [
+                    if (isCritico)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: const Color(0xFFFFE4E6), borderRadius: BorderRadius.circular(12)),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.bolt, color: Colors.pink, size: 12),
+                            SizedBox(width: 4),
+                            Text("Crítico", style: TextStyle(color: Colors.pink, fontSize: 11, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                      onPressed: () {
+                        _showDeleteConfirmation(id, name);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              name, 
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 15),
+            _rowItem(Icons.blur_on, mg),
+            _rowItem(Icons.access_time, freq),
+            _rowItem(Icons.calendar_today_outlined, units),
+          ],
+        ),
       ),
     );
   }
@@ -309,6 +471,31 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
           Text(text, style: const TextStyle(color: Color(0xFF64748B), fontSize: 14)),
         ],
       ),
+    );
+  }
+
+  void _showDeleteConfirmation(String id, String name) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Eliminar Medicamento"),
+          content: Text("¿Estás seguro de eliminar '$name'? Se borrará de forma permanente de tu Supabase."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _eliminarMedicamento(id);
+              },
+              child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

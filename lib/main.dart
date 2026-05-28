@@ -7,13 +7,11 @@ import 'package:intl/date_symbol_data_local.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 1. Inicializa Supabase
   await Supabase.initialize(
     url: 'https://qqhyyzlanjuczuddszym.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxaHl5emxhbmp1Y3p1ZGRzenltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjIwNjksImV4cCI6MjA5MzAzODA2OX0.QaXBaYH-UJyx_ZBpOLPdgQkKOCa9Imz4Rq6k5KQGK6I',
   );
   
-  // 2. CORREGIDO AQUÍ: Inicializa los datos de idioma para que el Dashboard no falle con las fechas
   await initializeDateFormatting('es', null); 
   
   runApp(const MyApp());
@@ -24,14 +22,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Obtenemos la sesión actual del usuario en Supabase
-    final session = Supabase.instance.client.auth.currentSession;
-    
-    // Si hay sesión, extraemos su nombre de los metadatos o su correo; si no, dejamos un valor por defecto
-    final String currentUserName = session?.user.userMetadata?['full_name'] ?? 
-                                   session?.user.email?.split('@')[0] ?? 
-                                   "Usuario";
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Dosify',
@@ -43,15 +33,33 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF1F9F9),
       ),
-      // --- CONTROL INTELIGENTE DE INICIO ---
-      // Si ya está logueado, va directo al Home; si no, muestra el Login
-      home: session != null 
-          ? MainNavigation(userName: currentUserName) 
-          : const LoginScreen(), 
-          
+      // --- NAVEGACIÓN BASADA EN STREAMS (PERSISTENCIA DE SESIÓN REAL) ---
+      home: StreamBuilder<AuthState>(
+        stream: Supabase.instance.client.auth.onAuthStateChange,
+        builder: (context, snapshot) {
+          // Mientras carga el estado inicial, muestra una ruedita
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator(color: Color(0xFF2B889C))),
+            );
+          }
+
+          final session = snapshot.data?.session;
+
+          if (session != null) {
+            // Extraer nombre del usuario si existe sesión
+            final String currentUserName = session.user.userMetadata?['full_name'] ?? 
+                                           session.user.email?.split('@')[0] ?? 
+                                           "Usuario";
+            return MainNavigation(userName: currentUserName);
+          } else {
+            return const LoginScreen();
+          }
+        },
+      ),
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => MainNavigation(userName: currentUserName), 
+        '/home': (context) => MainNavigation(userName: Supabase.instance.client.auth.currentSession?.user.email?.split('@')[0] ?? "Usuario"), 
       },
     );
   }
