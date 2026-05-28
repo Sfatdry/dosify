@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation.dart';
+import 'package:intl/date_symbol_data_local.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
