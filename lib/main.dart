@@ -7,11 +7,14 @@ import 'package:intl/date_symbol_data_local.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // --- CORREGIDO AQUÍ: Sintaxis correcta de Dart con parámetros nombrados y strings ('') ---
+  // 1. Inicializa Supabase
   await Supabase.initialize(
     url: 'https://qqhyyzlanjuczuddszym.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxaHl5emxhbmp1Y3p1ZGRzenltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjIwNjksImV4cCI6MjA5MzAzODA2OX0.QaXBaYH-UJyx_ZBpOLPdgQkKOCa9Imz4Rq6k5KQGK6I',
   );
+  
+  // 2. CORREGIDO AQUÍ: Inicializa los datos de idioma para que el Dashboard no falle con las fechas
+  await initializeDateFormatting('es', null); 
   
   runApp(const MyApp());
 }
