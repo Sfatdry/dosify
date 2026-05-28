@@ -22,6 +22,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. OBTENER LA SESIÓN ACTUAL INMEDIATAMENTE (Evita rebotes en recargas)
+    final initialSession = Supabase.instance.client.auth.currentSession;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Dosify',
@@ -33,21 +36,23 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF1F9F9),
       ),
-      // --- NAVEGACIÓN BASADA EN STREAMS (PERSISTENCIA DE SESIÓN REAL) ---
+      // --- NAVEGACIÓN BLINDADA CONTRA REFRESH ---
       home: StreamBuilder<AuthState>(
         stream: Supabase.instance.client.auth.onAuthStateChange,
         builder: (context, snapshot) {
-          // Mientras carga el estado inicial, muestra una ruedita
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          // Usamos la sesión activa del snapshot si existe, si no, respaldamos con la sesión inicial
+          final session = snapshot.data?.session ?? initialSession;
+
+          // Si el stream está esperando pero ya detectamos que SÍ había una sesión guardada,
+          // no mostramos la rueda de carga ni el login; lo mandamos directo a su pantalla.
+          if (snapshot.connectionState == ConnectionState.waiting && session == null) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator(color: Color(0xFF2B889C))),
             );
           }
 
-          final session = snapshot.data?.session;
-
           if (session != null) {
-            // Extraer nombre del usuario si existe sesión
+            // Extraer nombre del usuario de la sesión activa
             final String currentUserName = session.user.userMetadata?['full_name'] ?? 
                                            session.user.email?.split('@')[0] ?? 
                                            "Usuario";
@@ -59,7 +64,11 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => MainNavigation(userName: Supabase.instance.client.auth.currentSession?.user.email?.split('@')[0] ?? "Usuario"), 
+        '/home': (context) => MainNavigation(
+          userName: Supabase.instance.client.auth.currentSession?.user.userMetadata?['full_name'] ??
+                    Supabase.instance.client.auth.currentSession?.user.email?.split('@')[0] ?? 
+                    "Usuario"
+        ), 
       },
     );
   }
