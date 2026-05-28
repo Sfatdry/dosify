@@ -18,8 +18,6 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
 
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
-  
-  // 🚨 NUEVO: Variable para controlar el estado seleccionado (Por defecto 'Activo')
   String _estadoSeleccionado = 'Activo'; 
 
   bool _isLoadingUser = true;
@@ -62,18 +60,6 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
       initialDate: esFechaInicio ? (_fechaInicio ?? hoy) : (_fechaFin ?? _fechaInicio ?? hoy),
       firstDate: esFechaInicio ? hoy : (_fechaInicio ?? hoy), 
       lastDate: DateTime(hoy.year + 5), 
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF00ACC1), 
-              onPrimary: Colors.white,
-              onSurface: Color(0xFF006064),
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (seleccionado != null) {
@@ -93,56 +79,48 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
   Future<void> _guardarTratamiento() async {
     if (_nombreController.text.trim().isEmpty || _fechaInicio == null || _fechaFin == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Por favor, pon el nombre del tratamiento y ambas fechas"),
-          backgroundColor: Colors.orange,
-        ),
+        const SnackBar(content: Text("Por favor, llena todos los campos"), backgroundColor: Colors.orange),
       );
       return;
-    }
-
-    if (_currentUserId == null) {
-      _currentUserId = _uuidGenerator.v4(); 
     }
 
     setState(() => _isSaving = true);
 
     try {
       final String tratamientoId = _uuidGenerator.v4();
-
       final mapTratamiento = {
         'id': tratamientoId,
-        'usuario_id': _currentUserId, 
+        'usuario_id': _currentUserId ?? supabase.auth.currentUser?.id, 
         'nombre': _nombreController.text.trim(), 
         'fecha_inicio': DateFormat('yyyy-MM-dd').format(_fechaInicio!),
         'fecha_fin': DateFormat('yyyy-MM-dd').format(_fechaFin!),
-        // 🚨 CORREGIDO: Ahora guarda el estado que tú elijas en la pantalla
         'estado': _estadoSeleccionado, 
       };
 
       await supabase.from('tratamiento').insert(mapTratamiento);
 
       if (mounted) {
+        // 🚨 CAMBIO CLAVE: Mensaje de éxito en la misma interfaz
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Tratamiento guardado con éxito"),
+            content: Text("Tratamiento guardado con éxito"), 
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
 
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop(true);
-        } else {
-          Navigator.of(context).pushReplacementNamed('/');
-        }
+        // Limpiamos los controles para que pueda registrar otro si quiere sin salirse
+        setState(() {
+          _nombreController.clear();
+          _fechaInicio = null;
+          _fechaFin = null;
+          _estadoSeleccionado = 'Activo';
+        });
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error al registrar: $error"),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text("Error: $error"), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -162,164 +140,136 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
     const Color textCyan = Color(0xFF006064);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.grey),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pop(true), // Regresa avisando que puede haber cambios
         ),
       ),
       body: _isLoadingUser
           ? const Center(child: CircularProgressIndicator(color: primaryCyan))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Nuevo Tratamiento",
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: textCyan),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    "Define los rangos de tu medicación",
-                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 40),
+          : Center( 
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500), 
+                  child: Container(
+                    padding: const EdgeInsets.all(35),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, spreadRadius: 4)],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: primaryCyan.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+                            child: const Icon(Icons.assignment_outlined, color: primaryCyan, size: 40),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        const Center(child: Text("Tratamiento", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: textCyan))),
+                        const SizedBox(height: 30),
 
-                  // --- CAMPO: NOMBRE ---
-                  const Text("Nombre del tratamiento", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _nombreController,
-                    decoration: InputDecoration(
-                      hintText: "Ej. Paracetamol 500mg, Omeprazol...",
-                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                      prefixIcon: const Icon(Icons.medical_services_outlined, color: primaryCyan, size: 22),
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(color: primaryCyan, width: 2),
-                      ),
+                        const Text("Nombre del tratamiento", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _nombreController,
+                          decoration: InputDecoration(
+                            hintText: "Ej. Paracetamol 500mg",
+                            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                            prefixIcon: const Icon(Icons.medical_services_outlined, color: primaryCyan, size: 20),
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primaryCyan, width: 2)),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        const Text("Fecha de Inicio", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        _buildDatePickerButton(
+                          texto: _fechaInicio == null ? "dd/mm/aaaa" : DateFormat('dd / MM / yyyy').format(_fechaInicio!),
+                          icon: Icons.calendar_today_rounded,
+                          color: primaryCyan,
+                          onTap: () => _seleccionarFecha(context, true),
+                        ),
+                        const SizedBox(height: 20),
+
+                        const Text("Fecha de Fin", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        _buildDatePickerButton(
+                          texto: _fechaFin == null ? "dd/mm/aaaa" : DateFormat('dd / MM / yyyy').format(_fechaFin!),
+                          icon: Icons.calendar_month_rounded,
+                          color: primaryCyan,
+                          onTap: _fechaInicio == null ? null : () => _seleccionarFecha(context, false),
+                        ),
+                        const SizedBox(height: 20),
+
+                        const Text("Estado del tratamiento", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: _estadoSeleccionado,
+                          dropdownColor: Colors.white,
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.info_outline_rounded, color: primaryCyan, size: 20),
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primaryCyan, width: 2)),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'Activo', child: Text('Activo')),
+                            DropdownMenuItem(value: 'Completado', child: Text('Completado')),
+                            DropdownMenuItem(value: 'Pausado', child: Text('Pausado')),
+                            DropdownMenuItem(value: 'Cancelado', child: Text('Cancelado')),
+                          ],
+                          onChanged: (String? nuevoValor) {
+                            if (nuevoValor != null) setState(() => _estadoSeleccionado = nuevoValor);
+                          },
+                        ),
+                        const SizedBox(height: 35),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _guardarTratamiento,
+                            style: ElevatedButton.styleFrom(backgroundColor: primaryCyan, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                            child: _isSaving
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text("Guardar Tratamiento", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 25),
-
-                  // 🚨 NUEVA SECCIÓN: ESTADO DEL TRATAMIENTO 🚨
-                  const Text("Estado del tratamiento", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    value: _estadoSeleccionado,
-                    dropdownColor: Colors.white,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.toggle_on_outlined, color: primaryCyan, size: 22),
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(color: primaryCyan, width: 2),
-                      ),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'Activo', child: Text('Activo', style: TextStyle(fontSize: 14, color: Colors.black87))),
-                      DropdownMenuItem(value: 'Inactivo', child: Text('Inactivo', style: TextStyle(fontSize: 14, color: Colors.black87))),
-                    ],
-                    onChanged: (String? nuevoValor) {
-                      if (nuevoValor != null) {
-                        setState(() {
-                          _estadoSeleccionado = nuevoValor;
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 25),
-
-                  // --- CAMPO: FECHA INICIO ---
-                  const Text("Fecha de inicio", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  _buildDatePickerButton(
-                    texto: _fechaInicio == null ? "Seleccionar fecha de inicio" : DateFormat('dd / MM / yyyy').format(_fechaInicio!),
-                    icon: Icons.calendar_today_rounded,
-                    color: primaryCyan,
-                    onTap: () => _seleccionarFecha(context, true),
-                  ),
-                  const SizedBox(height: 25),
-
-                  // --- CAMPO: FECHA FIN ---
-                  const Text("Fecha de finalización", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  _buildDatePickerButton(
-                    texto: _fechaFin == null ? "Seleccionar fecha de fin" : DateFormat('dd / MM / yyyy').format(_fechaFin!),
-                    icon: Icons.calendar_month_rounded,
-                    color: primaryCyan,
-                    onTap: _fechaInicio == null ? null : () => _seleccionarFecha(context, false),
-                  ),
-                  const SizedBox(height: 45),
-
-                  // --- BOTÓN REGISTRAR ---
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _guardarTratamiento,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryCyan,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                        elevation: 0,
-                      ),
-                      child: _isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              "Registrar Tratamiento",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
     );
   }
 
-  Widget _buildDatePickerButton({
-    required String texto,
-    required IconData icon,
-    required Color color,
-    required VoidCallback? onTap,
-  }) {
+  Widget _buildDatePickerButton({required String texto, required IconData icon, required Color color, required VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(15),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 15),
+        decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
         child: Row(
           children: [
-            Icon(icon, color: onTap == null ? Colors.grey.shade400 : color, size: 22),
-            const SizedBox(width: 15),
-            Text(
-              texto,
-              style: TextStyle(
-                color: onTap == null ? Colors.grey.shade400 : (_fechaInicio != null || _fechaFin != null ? Colors.black87 : Colors.grey.shade500),
-                fontSize: 14,
-              ),
-            ),
+            Icon(icon, color: onTap == null ? Colors.grey.shade400 : color, size: 20),
+            const SizedBox(width: 12),
+            Text(texto, style: TextStyle(color: onTap == null ? Colors.grey.shade400 : Colors.black87, fontSize: 14)),
           ],
         ),
       ),
