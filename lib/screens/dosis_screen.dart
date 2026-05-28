@@ -18,7 +18,6 @@ class _DosisScreenState extends State<DosisScreen> {
   // Estado del botón seleccionado (en minúsculas por el CHECK constraint)
   String _selectedEstado = 'pendiente';
   
-  // CORRECCIÓN: Lista de medicamentos base en vez de tratamientos
   List<dynamic> _medicamentosDisponibles = [];
   String? _medicamentoSeleccionadoId;
   
@@ -37,12 +36,11 @@ class _DosisScreenState extends State<DosisScreen> {
     _cargarMedicamentosDesdeSupabase();
   }
 
-  // CORRECCIÓN: Apuntar directamente a la tabla 'medicamento' para cumplir la clave foránea
+  // Carga los medicamentos disponibles para el Dropdown
   Future<void> _cargarMedicamentosDesdeSupabase() async {
     try {
       setState(() => _isLoadingData = true);
       
-      // Consultamos la tabla 'medicamento' que es la que requiere la llave foránea
       final List<dynamic> response = await supabase
           .from('medicamento')
           .select('id, nombre')
@@ -61,10 +59,18 @@ class _DosisScreenState extends State<DosisScreen> {
     }
   }
 
+  // FUNCIÓN PRINCIPAL PARA GUARDAR LA DOSIS
   Future<void> _guardarDosisEnBaseDeDatos() async {
-    if (_medicamentoSeleccionadoId == null || _fechaSeleccionada == null || _horaSeleccionada == null) {
+    if (_medicamentoSeleccionadoId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Por favor, completa todos los campos"), backgroundColor: Colors.orange),
+        const SnackBar(content: Text("Por favor, selecciona un medicamento"), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (_fechaSeleccionada == null || _horaSeleccionada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Por favor, selecciona fecha y hora para la dosis"), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -72,6 +78,7 @@ class _DosisScreenState extends State<DosisScreen> {
     setState(() => _isSaving = true);
 
     try {
+      // Combinamos la fecha y hora seleccionada en un objeto DateTime final
       final DateTime fechaHoraFinal = DateTime(
         _fechaSeleccionada!.year,
         _fechaSeleccionada!.month,
@@ -82,12 +89,12 @@ class _DosisScreenState extends State<DosisScreen> {
 
       final String dosisId = _uuidGenerator.v4();
 
-      // Mapeo enviando un medicamento_id válido que existe en la tabla 'medicamento'
+      // Construcción del mapa respetando estrictamente los tipos de tu base de datos
       final mapDosis = {
         'id': dosisId,
-        'medicamento_id': _medicamentoSeleccionadoId, // ID verificado en la tabla de medicamentos
+        'medicamento_id': _medicamentoSeleccionadoId,
         'fecha_hora': fechaHoraFinal.toIso8601String(),
-        'estado': _selectedEstado.toLowerCase().trim(), 
+        'estado': _selectedEstado.toLowerCase().trim(), // Asegura minúsculas: 'tomada', 'pendiente', etc.
       };
 
       await supabase.from('dosis').insert(mapDosis);
@@ -101,6 +108,7 @@ class _DosisScreenState extends State<DosisScreen> {
           ),
         );
 
+        // Resetear campos tras un guardado exitoso
         setState(() {
           _fechaController.clear();
           _horaController.clear();
@@ -298,7 +306,11 @@ class _DosisScreenState extends State<DosisScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                           ),
                           child: _isSaving
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                )
                               : const Text(
                                   "Guardar Estado", 
                                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
