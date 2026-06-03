@@ -17,7 +17,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
   String? _tratamientoId; 
 
   bool isCritica = false;
-  bool isRecordatorioActivo = true; // Control local de la UI
+  bool isRecordatorioActivo = true; 
   final TextEditingController _repeticionesController = TextEditingController();
 
   @override
@@ -39,18 +39,22 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
         _isLoading = true;
       });
 
-      // Consultamos solo las columnas reales que acabas de configurar
+      // Consultamos usando los nombres de columnas exactos de tu base de datos
       final List<dynamic> tratamientos = await supabase
           .from('tratamiento')
-          .select('id, tipo_alerta, repeticiones, activo')
+          .select('id, tipo_alerta, repeticiones, recordatorio_activo')
           .limit(1);
 
       if (tratamientos.isNotEmpty) {
         final data = tratamientos.first;
         _tratamientoId = data['id']; 
-        isCritica = data['tipo_alerta'] == 'Crítica';
+        
+        // Comparamos en mayúsculas tal cual se ve en tu captura (NORMAL / CRÍTICA)
+        final String tipoAlerta = (data['tipo_alerta'] ?? 'NORMAL').toString().toUpperCase();
+        isCritica = tipoAlerta == 'CRÍTICA' || tipoAlerta == 'CRITICA';
+        
         _repeticionesController.text = (data['repeticiones'] ?? 1).toString();
-        isRecordatorioActivo = data['activo'] ?? true; // Mapeado a tu columna 'activo'
+        isRecordatorioActivo = data['recordatorio_activo'] ?? true; 
       } else {
         _tratamientoId = null;
         isCritica = false;
@@ -83,10 +87,11 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Mapeo exacto con los nombres de la base de datos de tus capturas
       final datosAEnviar = {
-        'tipo_alerta': isCritica ? 'Crítica' : 'Normal',
+        'tipo_alerta': isCritica ? 'CRÍTICA' : 'NORMAL',
         'repeticiones': repeticiones,
-        'activo': isRecordatorioActivo, // Sincroniza con tu columna 'activo'
+        'recordatorio_activo': isRecordatorioActivo, 
       };
 
       if (_tratamientoId != null) {
@@ -95,6 +100,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
             .update(datosAEnviar)
             .eq('id', _tratamientoId!);
       } else {
+        // En caso de insertar un registro nuevo si estuviera vacío
         await supabase
             .from('tratamiento')
             .insert(datosAEnviar);
