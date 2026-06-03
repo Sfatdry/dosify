@@ -35,45 +35,57 @@ class _HistorialScreenState extends State<HistorialScreen> {
         _errorMessage = '';
       });
 
-      final user = supabase.auth.currentUser;
-      if (user == null) {
-        setState(() {
-          _errorMessage = 'Usuario no autenticado';
-          _isLoading = false;
-        });
-        return;
-      }
-
       final List<dynamic> response = await supabase
           .from('historialcumplimiento')
           .select('porcentaje_cumplimiento, dosis_a_tiempo, dosis_tarde, dosis_omitidas')
           .order('fecha', ascending: false)
           .limit(1);
 
-      if (response.isEmpty) {
+      if (response.isNotEmpty) {
+        final data = response.first;
+
         setState(() {
-          _errorMessage = 'No hay registros de cumplimiento aún.';
-          _isLoading = false;
+          // 1. Jalamos los valores de la base de datos
+          _dosisTomadas = data['dosis_a_tiempo'] ?? 0;
+          _dosisTardias = data['dosis_tarde'] ?? 0;
+          _dosisOmitidas = data['dosis_omitidas'] ?? 0;
+          
+          // 2. Calculamos el total de dosis de forma estricta
+          _totalDosis = _dosisTomadas + _dosisTardias + _dosisOmitidas;
+
+          // 3. CÁLCULO MATEMÁTICO REAL: Para que coincida sí o sí con las dosis tomadas
+          if (_totalDosis > 0) {
+            // Contamos como "buenas" las dosis tomadas a tiempo y las tardías (porque al final se tomaron)
+            _porcentajeAdherencia = ((_dosisTomadas + _dosisTardias) / _totalDosis) * 100;
+          } else {
+            _porcentajeAdherencia = 0.0;
+          }
         });
-        return;
+      } else {
+        // Valores por defecto amigables si la tabla está vacía
+        setState(() {
+          _porcentajeAdherencia = 0.0;
+          _dosisTomadas = 0;
+          _dosisTardias = 0;
+          _dosisOmitidas = 0;
+          _totalDosis = 0;
+        });
       }
-
-      final data = response.first;
-
-      setState(() {
-        _porcentajeAdherencia = (data['porcentaje_cumplimiento'] ?? 0.0).toDouble();
-        _dosisTomadas = data['dosis_a_tiempo'] ?? 0;
-        _dosisTardias = data['dosis_tarde'] ?? 0;
-        _dosisOmitidas = data['dosis_omitidas'] ?? 0;
-        _totalDosis = _dosisTomadas + _dosisTardias + _dosisOmitidas;
-        _isLoading = false;
-      });
     } catch (e) {
       print('Error cargando historial: $e');
       setState(() {
-        _errorMessage = 'Error al conectar con el servidor.';
-        _isLoading = false;
+        _porcentajeAdherencia = 0.0;
+        _dosisTomadas = 0;
+        _dosisTardias = 0;
+        _dosisOmitidas = 0;
+        _totalDosis = 0;
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -240,7 +252,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                             ),
                             const SizedBox(height: 25),
 
-                            // BANNER INFERIOR COMPLETAMENTE PROTEGIDO CONTRA ERRORES
+                            // BANNER INFERIOR
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
