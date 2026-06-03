@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RecordatorioScreen extends StatefulWidget {
@@ -19,6 +20,9 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
   bool isCritica = false;
   bool isRecordatorioActivo = true; 
   final TextEditingController _repeticionesController = TextEditingController();
+  
+  // Variable para la hora seleccionada
+  TimeOfDay _horaSeleccionada = TimeOfDay.now();
 
   @override
   void initState() {
@@ -32,34 +36,63 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     super.dispose();
   }
 
-  // --- OBTENER CONFIGURACIÓN DESDE SUPABASE ---
+  // --- SELECTOR DE HORA ÉPICO ---
+  Future<void> _seleccionarHora(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _horaSeleccionada,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF00ACC1),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF1E293B),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _horaSeleccionada) {
+      setState(() {
+        _horaSeleccionada = picked;
+      });
+    }
+  }
+
+  // --- CONFIGURACIÓN DESDE SUPABASE ---
   Future<void> _cargarDatosRecordatorio() async {
     try {
       setState(() {
         _isLoading = true;
       });
 
-      // Consultamos usando los nombres de columnas exactos de tu base de datos
       final List<dynamic> tratamientos = await supabase
           .from('tratamiento')
-          .select('id, tipo_alerta, repeticiones, recordatorio_activo')
+          .select('id, tipo_alerta, repeticiones, recordatorio_activo, fecha_hora')
           .limit(1);
 
       if (tratamientos.isNotEmpty) {
         final data = tratamientos.first;
         _tratamientoId = data['id']; 
         
-        // Comparamos en mayúsculas tal cual se ve en tu captura (NORMAL / CRÍTICA)
         final String tipoAlerta = (data['tipo_alerta'] ?? 'NORMAL').toString().toUpperCase();
         isCritica = tipoAlerta == 'CRÍTICA' || tipoAlerta == 'CRITICA';
         
         _repeticionesController.text = (data['repeticiones'] ?? 1).toString();
         isRecordatorioActivo = data['recordatorio_activo'] ?? true; 
+
+        if (data['fecha_hora'] != null) {
+          final DateTime fechaBBDD = DateTime.parse(data['fecha_hora']).toLocal();
+          _horaSeleccionada = TimeOfDay(hour: fechaBBDD.hour, minute: fechaBBDD.minute);
+        }
       } else {
         _tratamientoId = null;
         isCritica = false;
         isRecordatorioActivo = true;
         _repeticionesController.text = "1";
+        _horaSeleccionada = TimeOfDay.now();
       }
       
     } catch (e) {
@@ -74,7 +107,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     }
   }
 
-  // --- GUARDAR ACTUALIZACIÓN EN SUPABASE ---
+  // --- GUARDAR EN SUPABASE ---
   Future<void> _guardarRecordatorio() async {
     final int? repeticiones = int.tryParse(_repeticionesController.text);
     if (repeticiones == null || repeticiones <= 0) {
@@ -87,11 +120,20 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Mapeo exacto con los nombres de la base de datos de tus capturas
+      final ahora = DateTime.now();
+      final DateTime fechaHoraRecordatorio = DateTime(
+        ahora.year,
+        ahora.month,
+        ahora.day,
+        _horaSeleccionada.hour,
+        _horaSeleccionada.minute,
+      );
+
       final datosAEnviar = {
         'tipo_alerta': isCritica ? 'CRÍTICA' : 'NORMAL',
         'repeticiones': repeticiones,
         'recordatorio_activo': isRecordatorioActivo, 
+        'fecha_hora': fechaHoraRecordatorio.toIso8601String(), 
       };
 
       if (_tratamientoId != null) {
@@ -100,7 +142,6 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
             .update(datosAEnviar)
             .eq('id', _tratamientoId!);
       } else {
-        // En caso de insertar un registro nuevo si estuviera vacío
         await supabase
             .from('tratamiento')
             .insert(datosAEnviar);
@@ -132,6 +173,10 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
   @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
+
+    final ahora = DateTime.now();
+    final dtHora = DateTime(ahora.year, ahora.month, ahora.day, _horaSeleccionada.hour, _horaSeleccionada.minute);
+    final String horaFormateada = DateFormat('hh:mm a').format(dtHora);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -191,6 +236,45 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                 ],
                               ),
                               const SizedBox(height: 30),
+
+                              // --- SECCIÓN HORA AGREGADA SIN TOCAR TU DISEÑO ---
+                              const Text(
+                                "Hora del Recordatorio",
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF475569)),
+                              ),
+                              const SizedBox(height: 10),
+                              InkWell(
+                                onTap: () => _seleccionarHora(context),
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF8FAFC),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.access_time_filled, color: primaryCyan),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            horaFormateada,
+                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                                          ),
+                                        ],
+                                      ),
+                                      const Text(
+                                        "Cambiar hora",
+                                        style: TextStyle(color: primaryCyan, fontWeight: FontWeight.bold, fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 25),
 
                               const Text(
                                 "Tipo de Alerta",

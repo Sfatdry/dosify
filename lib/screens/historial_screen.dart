@@ -14,7 +14,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
 
   bool _isLoading = true;
-  String _errorMessage = '';
 
   double _porcentajeAdherencia = 0.0;
   int _dosisTomadas = 0;
@@ -32,10 +31,9 @@ class _HistorialScreenState extends State<HistorialScreen> {
     try {
       setState(() {
         _isLoading = true;
-        _errorMessage = '';
       });
 
-      // Consultamos TODOS los registros para realizar una sumatoria real acumulada
+      // Consultamos de forma real todos los registros acumulados
       final List<dynamic> response = await supabase
           .from('historialcumplimiento')
           .select('dosis_a_tiempo, dosis_tarde, dosis_omitidas');
@@ -45,7 +43,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
         int tempTardias = 0;
         int tempOmitidas = 0;
 
-        // Sumamos dinámicamente cada fila que exista en tu base de datos
         for (var row in response) {
           tempTomadas += (row['dosis_a_tiempo'] as num? ?? 0).toInt();
           tempTardias += (row['dosis_tarde'] as num? ?? 0).toInt();
@@ -56,36 +53,17 @@ class _HistorialScreenState extends State<HistorialScreen> {
           _dosisTomadas = tempTomadas;
           _dosisTardias = tempTardias;
           _dosisOmitidas = tempOmitidas;
-          
-          // El total es la suma absoluta de todo lo registrado históricamente
           _totalDosis = _dosisTomadas + _dosisTardias + _dosisOmitidas;
 
-          // Fórmula matemática limpia de adherencia real
           if (_totalDosis > 0) {
             _porcentajeAdherencia = ((_dosisTomadas + _dosisTardias) / _totalDosis) * 100;
           } else {
             _porcentajeAdherencia = 0.0;
           }
         });
-      } else {
-        // Si la tabla está limpia, todo inicia en 0 perfectamente
-        setState(() {
-          _porcentajeAdherencia = 0.0;
-          _dosisTomadas = 0;
-          _dosisTardias = 0;
-          _dosisOmitidas = 0;
-          _totalDosis = 0;
-        });
       }
     } catch (e) {
-      print('Error cargando sumatoria de historial: $e');
-      setState(() {
-        _porcentajeAdherencia = 0.0;
-        _dosisTomadas = 0;
-        _dosisTardias = 0;
-        _dosisOmitidas = 0;
-        _totalDosis = 0;
-      });
+      print('Error cargando historial acumulado: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -115,19 +93,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // CARD PRINCIPAL SUPERIOR
+                        // --- CARD PRINCIPAL SUPERIOR ORIGINAL ---
                         Container(
                           padding: const EdgeInsets.all(25),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,23 +110,14 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: const [
-                                      Text(
-                                        "Historial de Cumplimiento",
-                                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-                                      ),
-                                      Text(
-                                        "Seguimiento acumulado del tratamiento",
-                                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                                      ),
+                                      Text("Historial de Cumplimiento", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                                      Text("Seguimiento acumulado del tratamiento", style: TextStyle(fontSize: 14, color: Colors.grey)),
                                     ],
                                   ),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text(
-                                        "${_porcentajeAdherencia.toStringAsFixed(0)}%",
-                                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryCyan),
-                                      ),
+                                      Text("${_porcentajeAdherencia.toStringAsFixed(0)}%", style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryCyan)),
                                       const Text("Adherencia", style: TextStyle(fontSize: 12, color: Colors.grey)),
                                     ],
                                   )
@@ -175,7 +138,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                               ),
                               const SizedBox(height: 30),
 
-                              // MINI TARJETAS
+                              // --- LAS TRES MINI TARJETAS ORIGINALES ASOCIADAS AL FLUJO ---
                               LayoutBuilder(
                                 builder: (context, constraints) {
                                   double spacing = 12;
@@ -217,7 +180,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                               ),
                               const SizedBox(height: 25),
 
-                              // TOTAL DE DOSIS
+                              // TOTAL DE DOSIS CON TU DISEÑO CELESTE
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                 decoration: BoxDecoration(
@@ -228,14 +191,8 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text(
-                                      "Total de dosis registradas",
-                                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF0369A1)),
-                                    ),
-                                    Text(
-                                      _totalDosis.toString(),
-                                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0369A1)),
-                                    ),
+                                    const Text("Total de dosis registradas", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF0369A1))),
+                                    Text(_totalDosis.toString(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0369A1))),
                                   ],
                                 ),
                               ),
@@ -244,14 +201,11 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         ),
                         const SizedBox(height: 25),
 
-                        // BANNER INFERIOR
+                        // --- TU BANNER INFERIOR CYAN ORIGINAL CON TU TEXTO ---
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: primaryCyan,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                          decoration: BoxDecoration(color: primaryCyan, borderRadius: BorderRadius.circular(18)),
                           child: Row(
                             children: [
                               const Icon(Icons.trending_up, color: Colors.white, size: 28),
@@ -260,15 +214,9 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      "¡Excelente progreso, ${widget.userName}!",
-                                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                    ),
+                                    Text("¡Excelente progreso, ${widget.userName}!", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                                     const SizedBox(height: 4),
-                                    const Text(
-                                      "Mantén tu adherencia para obtener los mejores resultados en tu tratamiento.",
-                                      style: TextStyle(color: Colors.white, fontSize: 13),
-                                    ),
+                                    const Text("Mantén tu adherencia para obtener los mejores resultados en tu tratamiento.", style: TextStyle(color: Colors.white, fontSize: 13)),
                                   ],
                                 ),
                               ),
@@ -297,11 +245,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
       width: width,
       constraints: const BoxConstraints(minWidth: 160),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: borderColor, width: 1),
-      ),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(15), border: Border.all(color: borderColor, width: 1)),
       child: Row(
         children: [
           Icon(icon, color: iconColor, size: 32),
@@ -311,16 +255,8 @@ class _HistorialScreenState extends State<HistorialScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  label,
-                  style: TextStyle(fontSize: 12, color: iconColor, fontWeight: FontWeight.w500),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  value,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: iconColor),
-                ),
+                Text(label, style: TextStyle(fontSize: 12, color: iconColor, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: iconColor)),
               ],
             ),
           ),
