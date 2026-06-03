@@ -37,7 +37,10 @@ void initState() {
     MedicamentoScreen(userName: widget.userName), 
     DosisScreen(userName: widget.userName),      
     RecordatorioScreen(userName: widget.userName),
-    InventoryScreen(userName: widget.userName),
+    InventoryScreen(
+      userName: widget.userName,
+      onVerFarmacias: () => setState(() => _selectedIndex = 10),
+    ),
     DietaScreen(userName: widget.userName),      
     NotaDeVozScreen(userName: widget.userName),  
     FarmaciaScreen(userName: widget.userName),    
