@@ -21,8 +21,8 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
   bool isRecordatorioActivo = true; 
   final TextEditingController _repeticionesController = TextEditingController();
   
-  // Variable para la hora seleccionada
-  TimeOfDay _horaSeleccionada = TimeOfDay.now();
+  // Manejo de hora local para la UI original
+  TimeOfDay _horaSeleccionada = const TimeOfDay(hour: 7, minute: 53);
 
   @override
   void initState() {
@@ -36,7 +36,6 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     super.dispose();
   }
 
-  // --- SELECTOR DE HORA ÉPICO ---
   Future<void> _seleccionarHora(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -61,16 +60,16 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     }
   }
 
-  // --- CONFIGURACIÓN DESDE SUPABASE ---
   Future<void> _cargarDatosRecordatorio() async {
     try {
       setState(() {
         _isLoading = true;
       });
 
+      // Consultamos únicamente las columnas existentes confirmadas en tu BD
       final List<dynamic> tratamientos = await supabase
           .from('tratamiento')
-          .select('id, tipo_alerta, repeticiones, recordatorio_activo, fecha_hora')
+          .select('id, tipo_alerta, repeticiones, recordatorio_activo')
           .limit(1);
 
       if (tratamientos.isNotEmpty) {
@@ -82,17 +81,11 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
         
         _repeticionesController.text = (data['repeticiones'] ?? 1).toString();
         isRecordatorioActivo = data['recordatorio_activo'] ?? true; 
-
-        if (data['fecha_hora'] != null) {
-          final DateTime fechaBBDD = DateTime.parse(data['fecha_hora']).toLocal();
-          _horaSeleccionada = TimeOfDay(hour: fechaBBDD.hour, minute: fechaBBDD.minute);
-        }
       } else {
         _tratamientoId = null;
         isCritica = false;
         isRecordatorioActivo = true;
         _repeticionesController.text = "1";
-        _horaSeleccionada = TimeOfDay.now();
       }
       
     } catch (e) {
@@ -107,7 +100,6 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     }
   }
 
-  // --- GUARDAR EN SUPABASE ---
   Future<void> _guardarRecordatorio() async {
     final int? repeticiones = int.tryParse(_repeticionesController.text);
     if (repeticiones == null || repeticiones <= 0) {
@@ -120,20 +112,11 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final ahora = DateTime.now();
-      final DateTime fechaHoraRecordatorio = DateTime(
-        ahora.year,
-        ahora.month,
-        ahora.day,
-        _horaSeleccionada.hour,
-        _horaSeleccionada.minute,
-      );
-
+      // Enviamos solo las columnas reales para evitar el PostgrestException de fecha_hora
       final datosAEnviar = {
         'tipo_alerta': isCritica ? 'CRÍTICA' : 'NORMAL',
         'repeticiones': repeticiones,
         'recordatorio_activo': isRecordatorioActivo, 
-        'fecha_hora': fechaHoraRecordatorio.toIso8601String(), 
       };
 
       if (_tratamientoId != null) {
@@ -190,18 +173,18 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                 padding: const EdgeInsets.all(25),
                 child: Center(
                   child: Container(
-                    constraints: const BoxConstraints(maxWidth: 600),
+                    constraints: const BoxConstraints(maxWidth: 650),
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(30),
+                          padding: const EdgeInsets.all(35),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 15,
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 20,
                                 offset: const Offset(0, 4),
                               )
                             ],
@@ -225,19 +208,18 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                     children: [
                                       const Text(
                                         "Configurar Alertas",
-                                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                                       ),
                                       Text(
                                         "Hola ${widget.userName}, gestiona tus avisos",
-                                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                        style: const TextStyle(fontSize: 14, color: Colors.grey),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 30),
+                              const SizedBox(height: 35),
 
-                              // --- SECCIÓN HORA AGREGADA SIN TOCAR TU DISEÑO ---
                               const Text(
                                 "Hora del Recordatorio",
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF475569)),
@@ -247,7 +229,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                 onTap: () => _seleccionarHora(context),
                                 borderRadius: BorderRadius.circular(16),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF8FAFC),
                                     borderRadius: BorderRadius.circular(16),
@@ -268,7 +250,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                       ),
                                       const Text(
                                         "Cambiar hora",
-                                        style: TextStyle(color: primaryCyan, fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: TextStyle(color: primaryCyan, fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
                                     ],
                                   ),
@@ -300,7 +282,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                 keyboardType: TextInputType.number,
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                                 decoration: InputDecoration(
-                                  hintText: "Ej. 3",
+                                  hintText: "Ej. 5",
                                   prefixIcon: const Icon(Icons.replay, color: primaryCyan),
                                   filled: true,
                                   fillColor: const Color(0xFFF8FAFC),
@@ -318,7 +300,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                               const SizedBox(height: 25),
 
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF0F9FF),
                                   borderRadius: BorderRadius.circular(16),
@@ -353,7 +335,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                   onPressed: _guardarRecordatorio,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: primaryCyan,
-                                    padding: const EdgeInsets.symmetric(vertical: 18),
+                                    padding: const EdgeInsets.symmetric(vertical: 20),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                     elevation: 0,
                                   ),
@@ -380,7 +362,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     return GestureDetector(
       onTap: () => setState(() => isCritica = label == "Crítica"),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFE0F7FA) : Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -399,7 +381,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
               style: TextStyle(
                 color: isSelected ? primaryCyan : const Color(0xFF64748B),
                 fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontSize: 15,
               ),
             ),
           ],
