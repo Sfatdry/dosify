@@ -36,32 +36,8 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF1F9F9),
       ),
-      // --- NAVEGACIÓN BLINDADA CONTRA REFRESH ---
-      home: StreamBuilder<AuthState>(
-        stream: Supabase.instance.client.auth.onAuthStateChange,
-        builder: (context, snapshot) {
-          // Usamos la sesión activa del snapshot si existe, si no, respaldamos con la sesión inicial
-          final session = snapshot.data?.session ?? initialSession;
-
-          // Si el stream está esperando pero ya detectamos que SÍ había una sesión guardada,
-          // no mostramos la rueda de carga ni el login; lo mandamos directo a su pantalla.
-          if (snapshot.connectionState == ConnectionState.waiting && session == null) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator(color: Color(0xFF2B889C))),
-            );
-          }
-
-          if (session != null) {
-            // Extraer nombre del usuario de la sesión activa
-            final String currentUserName = session.user.userMetadata?['full_name'] ?? 
-                                           session.user.email?.split('@')[0] ?? 
-                                           "Usuario";
-            return MainNavigation(userName: currentUserName);
-          } else {
-            return const LoginScreen();
-          }
-        },
-      ),
+      // Show splash screen first, then proceed to auth flow
+      home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => MainNavigation(

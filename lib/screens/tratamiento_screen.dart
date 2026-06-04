@@ -31,25 +31,14 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
   }
 
   Future<void> _obtenerUsuarioActivo() async {
-    try {
-      final List<dynamic> response = await supabase
-          .from('usuario')
-          .select('id')
-          .order('fecha_registro', ascending: false)
-          .limit(1);
-
-      if (response.isNotEmpty) {
-        _currentUserId = response.first['id'];
-      } else {
-        _currentUserId = supabase.auth.currentUser?.id;
-      }
-    } catch (e) {
-      debugPrint("Error obteniendo usuario: $e");
-      _currentUserId = supabase.auth.currentUser?.id;
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingUser = false);
-      }
+    // Directly use the authenticated user's ID. This guarantees that treatments are
+    // always linked to the currently logged‑in user and prevents accidental association
+    // with another account's data.
+    _currentUserId = supabase.auth.currentUser?.id;
+    // If for some reason the auth user is null (e.g., not logged in), keep the loading
+    // flag true so the UI can handle the missing session gracefully.
+    if (mounted) {
+      setState(() => _isLoadingUser = false);
     }
   }
 

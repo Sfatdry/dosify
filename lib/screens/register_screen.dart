@@ -20,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _selectedGender = "Mujer";
 
   Future<void> _registrarUsuario() async {
+    // Basic empty field check
     if (_nameController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
@@ -32,26 +33,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+      // Validate name (must contain at least two words, only letters and spaces)
+      final name = _nameController.text.trim();
+      final nameValid = name.split(' ').length >= 2 &&
+          RegExp(r'^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$').hasMatch(name);
+      if (!nameValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Ingresa un nombre completo válido (solo letras)") ,
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
 
+    // Validate email domain (allow only personal email providers)
+    final email = _emailController.text.trim();
+    final domain = email.split('@').length == 2 ? email.split('@')[1].toLowerCase() : '';
+    const allowedDomains = [
+      'gmail.com',
+      'yahoo.com',
+      'outlook.com',
+      'hotmail.com',
+      'live.com',
+      'icloud.com',
+    ];
+    if (!allowedDomains.contains(domain)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Utiliza un correo personal (ej. gmail, yahoo, outlook)"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
     try {
       // 1. Crear cuenta real en Supabase Auth (genera sesión persistente)
       final AuthResponse res = await supabase.auth.signUp(
-        email: _emailController.text.trim(),
+        email: email,
         password: _passwordController.text.trim(),
-        data: {'full_name': _nameController.text.trim()},
+        data: {'full_name': name},
       );
 
       // 2. Si el signup fue exitoso, guardar datos adicionales en tabla usuario
       if (res.user != null) {
         await supabase.from('usuario').insert({
           'id': res.user!.id,
-          'nombre': _nameController.text.trim(),
-          'email': _emailController.text.trim(),
+          'nombre': name,
+          'email': email,
           'password': _passwordController.text.trim(),
           'fecha_registro': DateTime.now().toIso8601String(),
         });
       }
+
+      // 3. Sign out to prevent auto‑login
+      await supabase.auth.signOut();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -60,6 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             backgroundColor: Colors.green,
           ),
         );
+        // Regresar a la pantalla de login
         Navigator.pop(context);
       }
     } on AuthException catch (e) {
