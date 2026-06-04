@@ -80,7 +80,14 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo
-              const Icon(Icons.medical_services, size: 100, color: tealColor),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/dosify_logo_hd.PNG',
+                  width: 150,
+                  height: 150,
+                ),
+              ),
               const SizedBox(height: 40),
 
               const Text(
