@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart'; // <-- Importación necesaria para el formato UUID
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,30 +9,23 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Instancia oficial de tu cliente de Supabase
   final SupabaseClient supabase = Supabase.instance.client;
 
-  // Instancia del generador de UUID
-  final Uuid _uuidGenerator = const Uuid();
-
-  // Controladores para capturar lo que escribes en la pantalla
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _nameController     = TextEditingController();
+  final TextEditingController _emailController    = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
-  String _selectedGender = "Mujer"; // Controla cuál círculo está seleccionado
+  String _selectedGender = "Mujer";
 
-  // FUNCIÓN PRINCIPAL: Guarda directo en tu tabla 'usuario' sin bloqueos de email
-  Future<void> _registrarUsuarioDirecto() async {
-    // 1. Validar que ningún campo se quede vacío
-    if (_nameController.text.trim().isEmpty || 
-        _emailController.text.trim().isEmpty || 
+  Future<void> _registrarUsuario() async {
+    if (_nameController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Por favor, llena todos los campos"), 
+          content: Text("Por favor, llena todos los campos"),
           backgroundColor: Colors.orange,
         ),
       );
@@ -43,36 +35,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // CORRECCIÓN AQUÍ: Generamos un UUID v4 real que Supabase acepta perfectamente
-      final String secureUuid = _uuidGenerator.v4();
+      // 1. Crear cuenta real en Supabase Auth (genera sesión persistente)
+      final AuthResponse res = await supabase.auth.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        data: {'full_name': _nameController.text.trim()},
+      );
 
-      // 2. Insertar los datos directamente en las columnas de tu tabla en Supabase
-      await supabase.from('usuario').insert({
-        'id': secureUuid, // <-- Ya no es un número, ahora es un UUID válido de 36 caracteres
-        'nombre': _nameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'password': _passwordController.text.trim(), // Guarda la contraseña directo
-        'fecha_registro': DateTime.now().toIso8601String(), // Llena el timestamp actual
-      });
+      // 2. Si el signup fue exitoso, guardar datos adicionales en tabla usuario
+      if (res.user != null) {
+        await supabase.from('usuario').insert({
+          'id': res.user!.id,
+          'nombre': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
+          'fecha_registro': DateTime.now().toIso8601String(),
+        });
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("¡Usuario registrado con éxito en Dosify!"), 
+            content: Text("¡Cuenta creada con éxito! Ya puedes iniciar sesión."),
             backgroundColor: Colors.green,
           ),
         );
-        
-        // Cierra la pantalla de registro y te regresa al Login o pantalla anterior
         Navigator.pop(context);
       }
-
-    } catch (error) {
-      // Si pasa un error con la base de datos, te avisará aquí
+    } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Error al guardar en Supabase: $error"), 
+            content: Text(e.message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error al guardar: $error"),
             backgroundColor: Colors.red,
           ),
         );
@@ -92,9 +95,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Paleta de colores Cyan Premium de tu diseño original
     const Color primaryCyan = Color(0xFF00ACC1);
-    const Color textCyan = Color(0xFF006064);
+    const Color textCyan    = Color(0xFF006064);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -130,20 +132,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 40),
 
-            // --- FILA DE SELECCIÓN DE GÉNERO (Tus 3 círculos interactivos) ---
+            // --- FILA DE SELECCIÓN DE GÉNERO ---
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildGenderCircle("Mujer", Icons.face_retouching_natural_rounded, primaryCyan),
+                _buildGenderCircle("Mujer",     Icons.face_retouching_natural_rounded, primaryCyan),
                 const SizedBox(width: 35),
-                _buildGenderCircle("Hombre", Icons.face_rounded, primaryCyan),
+                _buildGenderCircle("Hombre",    Icons.face_rounded,                    primaryCyan),
                 const SizedBox(width: 35),
-                _buildGenderCircle("No Binario", Icons.child_care_rounded, primaryCyan),
+                _buildGenderCircle("No Binario", Icons.child_care_rounded,             primaryCyan),
               ],
             ),
             const SizedBox(height: 40),
 
-            // Campo de texto: Nombre Completo
             _buildTextField(
               controller: _nameController,
               hintText: "Nombre Completo",
@@ -152,7 +153,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Campo de texto: Correo Electrónico
             _buildTextField(
               controller: _emailController,
               hintText: "Correo Electrónico",
@@ -162,7 +162,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Campo de texto: Contraseña con ojito para ocultar/mostrar
             _buildTextField(
               controller: _passwordController,
               hintText: "Contraseña",
@@ -170,18 +169,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               primaryColor: primaryCyan,
               obscureText: _obscurePassword,
               suffix: IconButton(
-                icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.grey),
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: Colors.grey,
+                ),
                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
               ),
             ),
             const SizedBox(height: 45),
 
-            // --- BOTÓN PRINCIPAL DE REGISTRO ---
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _registrarUsuarioDirecto,
+                onPressed: _isLoading ? null : _registrarUsuario,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryCyan,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -202,7 +203,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Creador estético de los círculos de género
   Widget _buildGenderCircle(String gender, IconData icon, Color activeColor) {
     bool isSelected = _selectedGender == gender;
     return GestureDetector(
@@ -210,8 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Column(
         children: [
           Container(
-            width: 68,
-            height: 68,
+            width: 68, height: 68,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFFF8FAFC),
@@ -220,11 +219,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: isSelected ? 2.5 : 1.0,
               ),
             ),
-            child: Icon(
-              icon,
-              size: 32,
-              color: isSelected ? activeColor : Colors.grey.shade400,
-            ),
+            child: Icon(icon, size: 32, color: isSelected ? activeColor : Colors.grey.shade400),
           ),
           const SizedBox(height: 8),
           Text(
@@ -240,7 +235,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Creador estético de los inputs con bordes redondeados y fondo suave
   Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,

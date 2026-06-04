@@ -15,19 +15,19 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
 
   bool _isLoading = true;
-  String? _tratamientoId; 
+  String? _recordatorioId; 
+  String? _medicamentoId; // Necesario para asociar el recordatorio
 
   bool isCritica = false;
   bool isRecordatorioActivo = true; 
   final TextEditingController _repeticionesController = TextEditingController();
   
-  // Manejo de hora local para la UI original
   TimeOfDay _horaSeleccionada = const TimeOfDay(hour: 7, minute: 53);
 
   @override
   void initState() {
     super.initState();
-    _cargarDatosRecordatorio();
+    _cargarDatosIniciales();
   }
 
   @override
@@ -60,47 +60,66 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     }
   }
 
-  Future<void> _cargarDatosRecordatorio() async {
+  // Obtenemos un medicamento disponible para poder asociar el recordatorio
+  Future<void> _cargarDatosIniciales() async {
     try {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
 
-      // Consultamos únicamente las columnas existentes confirmadas en tu BD
-      final List<dynamic> tratamientos = await supabase
-          .from('tratamiento')
-          .select('id, tipo_alerta, repeticiones, recordatorio_activo')
+      // 1. Buscamos el primer medicamento disponible para pruebas
+      final List<dynamic> medicamentos = await supabase
+          .from('medicamento')
+          .select('id, tratamiento_id, tratamiento(tipo_alerta, repeticiones)')
           .limit(1);
 
-      if (tratamientos.isNotEmpty) {
-        final data = tratamientos.first;
-        _tratamientoId = data['id']; 
+      if (medicamentos.isNotEmpty) {
+        _medicamentoId = medicamentos.first['id'];
         
-        final String tipoAlerta = (data['tipo_alerta'] ?? 'NORMAL').toString().toUpperCase();
-        isCritica = tipoAlerta == 'CRÍTICA' || tipoAlerta == 'CRITICA';
-        
-        _repeticionesController.text = (data['repeticiones'] ?? 1).toString();
-        isRecordatorioActivo = data['recordatorio_activo'] ?? true; 
+        // Cargamos los datos del tratamiento asociado para la UI corporativa
+        final tratamientoData = medicamentos.first['tratamiento'];
+        if (tratamientoData != null) {
+          _repeticionesController.text = (tratamientoData['repeticiones'] ?? 1).toString();
+          final String tipoAlerta = (tratamientoData['tipo_alerta'] ?? 'NORMAL').toString().toUpperCase();
+          isCritica = tipoAlerta == 'CRÍTICA' || tipoAlerta == 'CRITICA';
+        }
+
+        // 2. Buscamos si este medicamento ya tiene un registro en la tabla 'recordatorio'
+        final List<dynamic> recordatorios = await supabase
+            .from('recordatorio')
+            .select('id, fecha_hora, activo')
+            .eq('medicamento_id', _medicamentoId!)
+            .limit(1);
+
+        if (recordatorios.isNotEmpty) {
+          final rec = recordatorios.first;
+          _recordatorioId = rec['id'];
+          isRecordatorioActivo = rec['activo'] ?? true;
+
+          if (rec['fecha_hora'] != null) {
+            final DateTime dt = DateTime.parse(rec['fecha_hora']);
+            _horaSeleccionada = TimeOfDay(hour: dt.hour, minute: dt.minute);
+          }
+        }
       } else {
-        _tratamientoId = null;
-        isCritica = false;
-        isRecordatorioActivo = true;
         _repeticionesController.text = "1";
       }
-      
     } catch (e) {
-      print("Error al cargar recordatorio: $e");
+      print("Error al cargar datos: $e");
       _repeticionesController.text = "1";
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
   Future<void> _guardarRecordatorio() async {
+    if (_medicamentoId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No se encontró un medicamento válido para asignar el recordatorio.")),
+      );
+      return;
+    }
+
     final int? repeticiones = int.tryParse(_repeticionesController.text);
     if (repeticiones == null || repeticiones <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -112,29 +131,54 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Enviamos solo las columnas reales para evitar el PostgrestException de fecha_hora
-      final datosAEnviar = {
-        'tipo_alerta': isCritica ? 'CRÍTICA' : 'NORMAL',
-        'repeticiones': repeticiones,
-        'recordatorio_activo': isRecordatorioActivo, 
+      final ahora = DateTime.now();
+      final fechaHoraRecordatorio = DateTime(
+        ahora.year,
+        ahora.month,
+        ahora.day,
+        _horaSeleccionada.hour,
+        _horaSeleccionada.minute,
+      ).toIso8601String();
+
+      // 1. Guardamos en la tabla 'recordatorio' con sus campos reales
+      final datosRecordatorio = {
+        'medicamento_id': _medicamentoId,
+        'fecha_hora': fechaHoraRecordatorio,
+        'activo': isRecordatorioActivo,
       };
 
-      if (_tratamientoId != null) {
+      if (_recordatorioId != null) {
         await supabase
-            .from('tratamiento')
-            .update(datosAEnviar)
-            .eq('id', _tratamientoId!);
+            .from('recordatorio')
+            .update(datosRecordatorio)
+            .eq('id', _recordatorioId!);
       } else {
         await supabase
-            .from('tratamiento')
-            .insert(datosAEnviar);
+            .from('recordatorio')
+            .insert(datosRecordatorio);
       }
 
-      await _cargarDatosRecordatorio();
+      // 2. Opcional: Actualizamos también la tabla 'tratamiento' si deseas mantener los datos sincronizados
+      final List<dynamic> medAsociado = await supabase
+          .from('medicamento')
+          .select('tratamiento_id')
+          .eq('id', _medicamentoId!)
+          .limit(1);
+
+      if (medAsociado.isNotEmpty && medAsociado.first['tratamiento_id'] != null) {
+        final String tratamientoId = medAsociado.first['tratamiento_id'];
+        await supabase.from('tratamiento').update({
+          'tipo_alerta': isCritica ? 'CRÍTICA' : 'NORMAL',
+          'repeticiones': repeticiones,
+          'recordatorio_activo': isRecordatorioActivo,
+        }).eq('id', tratamientoId);
+      }
+
+      await _cargarDatosIniciales();
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("¡Configuración guardada con éxito! 🎉"),
+          content: Text("¡Recordatorio guardado con éxito en la tabla correspondiente! 🎉"),
           backgroundColor: Color(0xFF10B981),
         ),
       );
@@ -143,7 +187,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error al guardar en la BD: $e"), 
-          backgroundColor: Colors.redAccent
+          backgroundColor: Colors.redAccent,
         ),
       );
     } finally {
@@ -166,7 +210,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: primaryCyan))
           : RefreshIndicator(
-              onRefresh: _cargarDatosRecordatorio,
+              onRefresh: _cargarDatosIniciales,
               color: primaryCyan,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),

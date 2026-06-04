@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register_screen.dart';
-import 'main_navigation.dart'; 
 import '../widgets/neumorphic_input.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -11,46 +11,65 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _userController = TextEditingController();
+  final _emailController    = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _userController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // --- FUNCIÓN CORREGIDA ---
-  void _handleLogin() {
-    String username = _userController.text.trim();
-    String password = _passwordController.text.trim();
+  Future<void> _handleLogin() async {
+    final email    = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Por favor, ingresa tu usuario y contraseña"),
+          content: Text("Por favor, ingresa tu correo y contraseña"),
           backgroundColor: Colors.redAccent,
         ),
       );
       return;
     }
 
-    // 1. Quitamos el 'const' de MainNavigation
-    // 2. Le pasamos el texto de '_userController' como userName
-    Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(
-    builder: (context) => MainNavigation(userName: _userController.text),
-  ),
-);
-    
+    setState(() => _isLoading = true);
+
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      // El StreamBuilder en main.dart detecta la sesión y navega automáticamente
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error inesperado: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Usamos una variable para el color por si acaso DosifyColors falla
-    const Color tealColor = Color(0xFF00ACC1); 
+    const Color tealColor = Color(0xFF00ACC1);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F9F9),
@@ -63,12 +82,12 @@ class _LoginScreenState extends State<LoginScreen> {
               // Logo
               const Icon(Icons.medical_services, size: 100, color: tealColor),
               const SizedBox(height: 40),
-              
+
               const Text(
                 "Bienvenido",
                 style: TextStyle(
-                  fontSize: 28, 
-                  fontWeight: FontWeight.bold, 
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
                   color: Color(0xFF006064),
                 ),
               ),
@@ -78,43 +97,45 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               const SizedBox(height: 40),
-              
-              // Input Usuario
+
+              // Input Correo
               NeumorphicInput(
-                hintText: "Nombre de Usuario", 
-                icon: Icons.person_outline, 
-                controller: _userController,
+                hintText: "Correo electrónico",
+                icon: Icons.email_outlined,
+                controller: _emailController,
               ),
               const SizedBox(height: 20),
-              
+
               // Input Contraseña
               NeumorphicInput(
-                hintText: "Contraseña", 
-                icon: Icons.lock_outline, 
-                isPassword: true, 
+                hintText: "Contraseña",
+                icon: Icons.lock_outline,
+                isPassword: true,
                 controller: _passwordController,
               ),
-              
+
               const SizedBox(height: 40),
-              
-              // Botón de Inicio de Sesión
+
+              // Botón Iniciar Sesión
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: _handleLogin, // Llamamos a la función corregida
+                  onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: tealColor,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                     elevation: 5,
                   ),
-                  child: const Text(
-                    "Iniciar Sesión", 
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Iniciar Sesión",
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
                 ),
               ),
-              
+
               const SizedBox(height: 30),
 
               // Enlace a Registro
@@ -123,12 +144,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Text("¿No tienes cuenta? ", style: TextStyle(color: Colors.grey)),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                      );
-                    },
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                    ),
                     child: const Text(
                       "Regístrate",
                       style: TextStyle(
