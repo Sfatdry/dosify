@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class RecordatorioScreen extends StatefulWidget {
   final String userName;
@@ -223,6 +224,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
       }
 
       await _cargarDatosIniciales();
+    await _playNotificationSound();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -249,6 +251,12 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  // Play a notification sound using audioplayers
+  Future<void> _playNotificationSound() async {
+    final player = AudioPlayer();
+    await player.play(AssetSource('assets/sounds/notification.wav'));
   }
 
   @override

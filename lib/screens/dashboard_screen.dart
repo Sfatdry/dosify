@@ -579,6 +579,184 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ],
                           ),
                         ),
+                        const SizedBox(height: 35),
+                        StreamBuilder<List<Map<String, dynamic>>>(
+                          stream: supabase
+                              .from('notavoz')
+                              .stream(primaryKey: ['id'])
+                              .order('fecha', ascending: false),
+                          builder: (context, notaSnapshot) {
+                            if (notaSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.orange,
+                                ),
+                              );
+                            }
+
+                            final Map<String, String> tratNombreMap = {
+                              for (var t in tratamientos)
+                                t['id'].toString():
+                                    t['nombre'] ?? 'Tratamiento'
+                            };
+
+                            final allNotas = notaSnapshot.data ?? [];
+                            final userNotas = allNotas
+                                .where(
+                                  (n) => tratamientoIds.contains(
+                                    n['tratamiento_id'].toString(),
+                                  ),
+                                )
+                                .toList();
+
+                            final recentNotas = userNotas.take(3).toList();
+
+                            return Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(25),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.mic_rounded,
+                                        color: Colors.orange,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        "Notas de voz recientes",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF006064),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  if (recentNotas.isEmpty)
+                                    const Text(
+                                      "No tienes notas de voz registradas aún.",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                    )
+                                  else
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemCount: recentNotas.length,
+                                      itemBuilder: (context, index) {
+                                        final nota = recentNotas[index];
+                                        final String desc = nota['url_audio'] ??
+                                            'Sin descripción';
+                                        final String tratId =
+                                            nota['tratamiento_id']
+                                                    ?.toString() ??
+                                                '';
+                                        final String tratNombre =
+                                            tratNombreMap[tratId] ??
+                                                'Tratamiento';
+
+                                        String fechaStr = '';
+                                        if (nota['fecha'] != null) {
+                                          try {
+                                            final dt = DateTime.parse(
+                                              nota['fecha'].toString(),
+                                            ).toLocal();
+                                            fechaStr = DateFormat(
+                                              'dd/MM/yyyy hh:mm a',
+                                            ).format(dt);
+                                          } catch (_) {}
+                                        }
+
+                                        return Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 12,
+                                          ),
+                                          padding: const EdgeInsets.all(14),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange
+                                                .withOpacity(0.05),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: Colors.orange
+                                                  .withOpacity(0.15),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.orange
+                                                      .withOpacity(0.1),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.mic_rounded,
+                                                  color: Colors.orange,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 15),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      desc,
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color:
+                                                            Color(0xFF006064),
+                                                        fontSize: 14,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      "Tratamiento: $tratNombre",
+                                                      style: const TextStyle(
+                                                        color: Colors.grey,
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              if (fechaStr.isNotEmpty)
+                                                Text(
+                                                  fechaStr,
+                                                  style: const TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 11,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
