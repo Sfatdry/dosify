@@ -31,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // FUNCIÓN PARA CONSULTAR SUPABASE: Trae la última fila registrada
   Future<void> _cargarDatosDelUsuario() async {
     try {
-      // Hacemos un SELECT a la tabla 'usuario'. 
+      // Hacemos un SELECT a la tabla 'usuario'.
       final List<dynamic> response = await supabase
           .from('usuario')
           .select()
@@ -40,10 +40,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (response.isNotEmpty) {
         final usuario = response.first;
-        
+
         // Guardamos los datos locales
         _userId = usuario['id'];
-        
+
         // Colocamos el texto real dentro de tus inputs estéticos
         _nameController.text = usuario['nombre'] ?? '';
         _emailController.text = usuario['email'] ?? '';
@@ -76,11 +76,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isSaving = true);
 
     try {
-      await supabase.from('usuario').update({
-        'nombre': _nameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'password': _passwordController.text.trim(),
-      }).eq('id', _userId!);
+      await supabase
+          .from('usuario')
+          .update({
+            'nombre': _nameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'password': _passwordController.text.trim(),
+          })
+          .eq('id', _userId!);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -135,7 +138,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 550),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 10,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -149,7 +155,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: primaryCyan,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.person, color: Colors.white, size: 35),
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 35,
+                            ),
                           ),
                           const SizedBox(width: 20),
                           Column(
@@ -157,12 +167,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               const Text(
                                 "Perfil de Usuario",
-                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textCyan),
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: textCyan,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 "Administra tu información personal",
-                                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
                             ],
                           ),
@@ -171,7 +188,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 40),
 
                       // Label: Nombre completo
-                      const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
+                      const Text(
+                        "Nombre completo",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: textCyan,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       _buildTextField(
                         controller: _nameController,
@@ -181,7 +205,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 25),
 
                       // Label: Correo electrónico
-                      const Text("Correo electrónico", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
+                      const Text(
+                        "Correo electrónico",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: textCyan,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       _buildTextField(
                         controller: _emailController,
@@ -192,7 +223,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 25),
 
                       // Label: Contraseña
-                      const Text("Contraseña", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
+                      const Text(
+                        "Contraseña",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: textCyan,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       _buildTextField(
                         controller: _passwordController,
@@ -210,14 +248,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onPressed: _isSaving ? null : _actualizarPerfil,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryCyan,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
                             elevation: 0,
                           ),
                           child: _isSaving
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
                               : const Text(
                                   "Guardar Cambios",
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                         ),
                       ),
@@ -246,7 +292,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         prefixIcon: Icon(icon, color: primaryColor, size: 22),
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 20,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(color: Colors.grey.shade200),

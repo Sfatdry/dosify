@@ -8,7 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AsistenteIaScreen extends StatefulWidget {
   final String userName;
   final String userId;
-  const AsistenteIaScreen({super.key, required this.userName, required this.userId});
+  const AsistenteIaScreen({
+    super.key,
+    required this.userName,
+    required this.userId,
+  });
 
   @override
   State<AsistenteIaScreen> createState() => _AsistenteIaScreenState();
@@ -21,7 +25,8 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
 
   final List<Map<String, dynamic>> _messages = [];
   bool _isTyping = false;
-  String _geminiApiKey = ''; // Clave de API de Gemini opcional (se carga de SharedPreferences)
+  String _geminiApiKey =
+      ''; // Clave de API de Gemini opcional (se carga de SharedPreferences)
 
   // Datos contextuales del usuario
   List<Map<String, dynamic>> _medicamentos = [];
@@ -53,7 +58,8 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
 
   void _addInitialMessage() {
     _messages.add({
-      'text': '¡Hola, ${widget.userName}! Soy tu asistente personal de Dosify. 🤖💊\n\n¿En qué puedo ayudarte hoy? Puedes preguntarme sobre tus medicamentos, dosis del día, tu dieta o consejos de salud.',
+      'text':
+          '¡Hola, ${widget.userName}! Soy tu asistente personal de Dosify. 🤖💊\n\n¿En qué puedo ayudarte hoy? Puedes preguntarme sobre tus medicamentos, dosis del día, tu dieta o consejos de salud.',
       'isUser': false,
       'time': DateFormat('h:mm a').format(DateTime.now()),
     });
@@ -96,7 +102,6 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
           .select()
           .inFilter('medicamento_id', listMedIds);
       _dosis = List<Map<String, dynamic>>.from(ds);
-
     } catch (e) {
       debugPrint('Error cargando contexto de IA: $e');
     }
@@ -127,7 +132,8 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
         } catch (geminiError) {
           debugPrint('Gemini error: $geminiError');
           final localRes = await _getLocalResponse(text);
-          responseText = '⚠️ *Nota:* Hubo un problema al conectar con Gemini (posiblemente la clave de API sea inválida o esté vencida). Utilizando el motor local offline:\n\n$localRes';
+          responseText =
+              '⚠️ *Nota:* Hubo un problema al conectar con Gemini (posiblemente la clave de API sea inválida o esté vencida). Utilizando el motor local offline:\n\n$localRes';
         }
       } else {
         responseText = await _getLocalResponse(text);
@@ -152,11 +158,12 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
   // LLamada directa a la API de Gemini (Fast and zero-config wrapper)
   Future<String> _getGeminiResponse(String prompt) async {
     final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$_geminiApiKey'
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$_geminiApiKey',
     );
 
     // Adjuntamos datos del contexto para que Gemini los use en la respuesta
-    final contextPrompt = '''
+    final contextPrompt =
+        '''
     Eres un asistente médico inteligente y amigable llamado "Dosify AI". Tu objetivo es ayudar a ${widget.userName} con su salud.
     
     Información real del paciente en la app:
@@ -180,16 +187,17 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
         'contents': [
           {
             'parts': [
-              {'text': contextPrompt}
-            ]
-          }
-        ]
+              {'text': contextPrompt},
+            ],
+          },
+        ],
       }),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final String text = data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
+      final String text =
+          data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
       return text.trim();
     } else {
       throw Exception('Código de error Gemini: ${response.statusCode}');
@@ -206,13 +214,15 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
     }).toList();
 
     if (dosisHoy.isEmpty) return "Ninguna dosis programada para hoy.";
-    return dosisHoy.map((d) {
-      final med = _medicamentos.firstWhere(
-        (m) => m['id'].toString() == d['medicamento_id'].toString(),
-        orElse: () => {'nombre': 'Medicamento desconocido'},
-      );
-      return "${med['nombre']} - Estado: ${d['estado']} a las ${DateFormat('HH:mm').format(DateTime.parse(d['fecha_hora']).toLocal())}";
-    }).join('\n');
+    return dosisHoy
+        .map((d) {
+          final med = _medicamentos.firstWhere(
+            (m) => m['id'].toString() == d['medicamento_id'].toString(),
+            orElse: () => {'nombre': 'Medicamento desconocido'},
+          );
+          return "${med['nombre']} - Estado: ${d['estado']} a las ${DateFormat('HH:mm').format(DateTime.parse(d['fecha_hora']).toLocal())}";
+        })
+        .join('\n');
   }
 
   // Motor inteligente local en Dart integrado a la BD (Para funcionar 100% offline/sin clave)
@@ -223,16 +233,27 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
     final query = text.toLowerCase();
 
     // 1. PREGUNTAS SOBRE MEDICAMENTOS
-    if (query.contains('medicamento') || query.contains('remedio') || query.contains('pastilla')) {
+    if (query.contains('medicamento') ||
+        query.contains('remedio') ||
+        query.contains('pastilla')) {
       if (_medicamentos.isEmpty) {
         return 'Actualmente no tienes medicamentos registrados en tu inventario o tratamientos activos. ¿Te gustaría que te ayude a crear uno en la sección "Medicamento"?';
       }
-      final list = _medicamentos.map((m) => '• *${m['nombre']}* (${m['dosis'] ?? "Sin dosis especificada"}) cada ${m['frecuencia_horas']} horas.').join('\n');
+      final list = _medicamentos
+          .map(
+            (m) =>
+                '• *${m['nombre']}* (${m['dosis'] ?? "Sin dosis especificada"}) cada ${m['frecuencia_horas']} horas.',
+          )
+          .join('\n');
       return 'Aquí tienes la lista de tus medicamentos registrados actualmente:\n\n$list\n\n¿Quieres saber los horarios específicos de alguno de ellos?';
     }
 
     // 2. PREGUNTAS SOBRE DOSIS U HORARIOS
-    if (query.contains('dosis') || query.contains('horario') || query.contains('hora') || query.contains('hoy') || query.contains('toca')) {
+    if (query.contains('dosis') ||
+        query.contains('horario') ||
+        query.contains('hora') ||
+        query.contains('hoy') ||
+        query.contains('toca')) {
       final hoy = DateTime.now();
       final dosisHoy = _dosis.where((d) {
         if (d['fecha_hora'] == null) return false;
@@ -244,40 +265,63 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
         return 'No tienes ninguna dosis programada o registrada para el día de hoy en tu calendario. Asegúrate de tener tratamientos activos creados.';
       }
 
-      dosisHoy.sort((a, b) => a['fecha_hora'].toString().compareTo(b['fecha_hora'].toString()));
+      dosisHoy.sort(
+        (a, b) =>
+            a['fecha_hora'].toString().compareTo(b['fecha_hora'].toString()),
+      );
 
-      final list = dosisHoy.map((d) {
-        final med = _medicamentos.firstWhere(
-          (m) => m['id'].toString() == d['medicamento_id'].toString(),
-          orElse: () => {'nombre': 'Medicamento'},
-        );
-        final hora = DateFormat('hh:mm a').format(DateTime.parse(d['fecha_hora']).toLocal());
-        String estadoEmoji = '⏳';
-        if (d['estado'] == 'tomada') estadoEmoji = '✅';
-        if (d['estado'] == 'omitida') estadoEmoji = '❌';
-        if (d['estado'] == 'tarde') estadoEmoji = '⏰';
+      final list = dosisHoy
+          .map((d) {
+            final med = _medicamentos.firstWhere(
+              (m) => m['id'].toString() == d['medicamento_id'].toString(),
+              orElse: () => {'nombre': 'Medicamento'},
+            );
+            final hora = DateFormat(
+              'hh:mm a',
+            ).format(DateTime.parse(d['fecha_hora']).toLocal());
+            String estadoEmoji = '⏳';
+            if (d['estado'] == 'tomada') estadoEmoji = '✅';
+            if (d['estado'] == 'omitida') estadoEmoji = '❌';
+            if (d['estado'] == 'tarde') estadoEmoji = '⏰';
 
-        return '$estadoEmoji *${med['nombre']}* a las $hora (Estado: ${d['estado']})';
-      }).join('\n');
+            return '$estadoEmoji *${med['nombre']}* a las $hora (Estado: ${d['estado']})';
+          })
+          .join('\n');
 
       return 'Este es tu cronograma de dosis para hoy:\n\n$list\n\n¿Quieres registrar alguna dosis como tomada? Puedes hacerlo directamente en la pestaña "Dosis".';
     }
 
     // 3. PREGUNTAS SOBRE DIETA
-    if (query.contains('dieta') || query.contains('comer') || query.contains('comida') || query.contains('alimento')) {
+    if (query.contains('dieta') ||
+        query.contains('comer') ||
+        query.contains('comida') ||
+        query.contains('alimento')) {
       if (_dietas.isEmpty) {
         return 'No tienes dietas registradas asociadas a tus tratamientos activos. Recuerda que puedes planificar tus dietas médicas en la pestaña "Dieta".';
       }
-      final list = _dietas.map((d) => '• *${d['descripcion']}* (Del ${d['fecha_inicio'] ?? "Inicio"} al ${d['fecha_fin'] ?? "Fin"})').join('\n');
+      final list = _dietas
+          .map(
+            (d) =>
+                '• *${d['descripcion']}* (Del ${d['fecha_inicio'] ?? "Inicio"} al ${d['fecha_fin'] ?? "Fin"})',
+          )
+          .join('\n');
       return 'Aquí tienes tus especificaciones de dietas activas:\n\n$list\n\n¿Necesitas recomendaciones saludables para acompañar tu plan alimenticio?';
     }
 
     // 4. PREGUNTAS SOBRE INVENTARIO / STOCK
-    if (query.contains('inventario') || query.contains('stock') || query.contains('cantidad') || query.contains('falta') || query.contains('caja')) {
+    if (query.contains('inventario') ||
+        query.contains('stock') ||
+        query.contains('cantidad') ||
+        query.contains('falta') ||
+        query.contains('caja')) {
       try {
-        final listTratIds = _tratamientos.map((t) => t['id'].toString()).toList();
+        final listTratIds = _tratamientos
+            .map((t) => t['id'].toString())
+            .toList();
         if (listTratIds.isNotEmpty) {
-          final listMedIds = _medicamentos.map((m) => m['id'].toString()).toList();
+          final listMedIds = _medicamentos
+              .map((m) => m['id'].toString())
+              .toList();
           if (listMedIds.isNotEmpty) {
             final invRes = await _supabase
                 .from('inventario')
@@ -289,18 +333,23 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
               return 'No tienes registros de stock en tu inventario actualmente.';
             }
 
-            final list = inventarios.map((inv) {
-              final med = _medicamentos.firstWhere(
-                (m) => m['id'].toString() == inv['medicamento_id'].toString(),
-                orElse: () => {'nombre': 'Medicamento'},
-              );
-              final actual = inv['cantidad_actual'] ?? 0;
-              final inicial = inv['cantidad_inicial'] ?? 0;
-              final alerta = inv['alerta_minima'] ?? 5;
-              final aviso = actual <= alerta ? '⚠️ ¡Queda poco!' : '✅ Suficiente';
+            final list = inventarios
+                .map((inv) {
+                  final med = _medicamentos.firstWhere(
+                    (m) =>
+                        m['id'].toString() == inv['medicamento_id'].toString(),
+                    orElse: () => {'nombre': 'Medicamento'},
+                  );
+                  final actual = inv['cantidad_actual'] ?? 0;
+                  final inicial = inv['cantidad_inicial'] ?? 0;
+                  final alerta = inv['alerta_minima'] ?? 5;
+                  final aviso = actual <= alerta
+                      ? '⚠️ ¡Queda poco!'
+                      : '✅ Suficiente';
 
-              return '• *${med['nombre']}*: $actual/$inicial unidades ($aviso)';
-            }).join('\n');
+                  return '• *${med['nombre']}*: $actual/$inicial unidades ($aviso)';
+                })
+                .join('\n');
 
             return 'Este es el balance actual de tu inventario de medicamentos:\n\n$list\n\n¿Quieres actualizar el stock inicial de algún medicamento? Hazlo desde la sección "Inventario".';
           }
@@ -310,12 +359,18 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
     }
 
     // 5. SALUDOS O INTRODUCCIÓN
-    if (query.contains('hola') || query.contains('buenos dias') || query.contains('buenas tardes') || query.contains('buenas noches')) {
+    if (query.contains('hola') ||
+        query.contains('buenos dias') ||
+        query.contains('buenas tardes') ||
+        query.contains('buenas noches')) {
       return '¡Hola de nuevo, ${widget.userName}! ¿Cómo te sientes hoy? Estoy aquí para ayudarte a llevar el control de tus medicamentos, recordatorios y brindarte consejos útiles.';
     }
 
     // 6. AGRADECIMIENTOS
-    if (query.contains('gracias') || query.contains('buenisimo') || query.contains('perfecto') || query.contains('ok')) {
+    if (query.contains('gracias') ||
+        query.contains('buenisimo') ||
+        query.contains('perfecto') ||
+        query.contains('ok')) {
       return '¡De nada! Es un placer ayudarte. Recuerda que mantener la constancia en tus tratamientos es vital para tu bienestar. ¿Hay algo más en lo que te pueda asistir?';
     }
 
@@ -367,7 +422,9 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
             child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00ACC1)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00ACC1),
+            ),
             onPressed: () async {
               final newKey = ctrl.text.trim();
               setState(() {
@@ -377,18 +434,22 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setString('gemini_api_key', newKey);
               } catch (e) {
-                debugPrint('Error guardando API key: $e');
+                debugPrint('Error al guardar la clave API: $e');
               }
-              Navigator.pop(context);
-              // Usamos el ScaffoldMessenger del widget padre (no del dialog)
-              ScaffoldMessenger.of(this.context).showSnackBar(
-                SnackBar(
-                  content: Text(newKey.isEmpty
-                      ? 'Modo Local restablecido.'
-                      : '¡Modo Gemini activado con éxito! 🧠'),
-                  backgroundColor: const Color(0xFF00ACC1),
-                ),
-              );
+              if (mounted) {
+                Navigator.pop(context);
+                // Usamos el ScaffoldMessenger del widget padre (no del dialog)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      newKey.isEmpty
+                          ? 'Modo Local restablecido.'
+                          : '¡Modo Gemini activado con éxito! 🧠',
+                    ),
+                    backgroundColor: const Color(0xFF00ACC1),
+                  ),
+                );
+              }
             },
             child: const Text('Guardar', style: TextStyle(color: Colors.white)),
           ),
@@ -412,13 +473,20 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
             children: [
               // --- HEADER DEL ASISTENTE ---
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 15,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, spreadRadius: 2)
-                  ]
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -427,7 +495,10 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                       children: [
                         CircleAvatar(
                           backgroundColor: primaryCyan.withOpacity(0.1),
-                          child: const Icon(Icons.chat_bubble_outline_rounded, color: primaryCyan),
+                          child: const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: primaryCyan,
+                          ),
                         ),
                         const SizedBox(width: 15),
                         Column(
@@ -435,7 +506,11 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                           children: [
                             const Text(
                               'Asistente de IA',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textCyan),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: textCyan,
+                              ),
                             ),
                             Row(
                               children: [
@@ -443,14 +518,21 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                                   width: 8,
                                   height: 8,
                                   decoration: BoxDecoration(
-                                    color: _geminiApiKey.isEmpty ? Colors.blue : Colors.green,
+                                    color: _geminiApiKey.isEmpty
+                                        ? Colors.blue
+                                        : Colors.green,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  _geminiApiKey.isEmpty ? 'Motor Local (Conectado)' : 'Modo Gemini Activo',
-                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                  _geminiApiKey.isEmpty
+                                      ? 'Motor Local (Conectado)'
+                                      : 'Modo Gemini Activo',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ],
                             ),
@@ -459,7 +541,10 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.settings_outlined, color: primaryCyan),
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: primaryCyan,
+                      ),
                       tooltip: 'Configurar IA',
                       onPressed: _showApiKeyDialog,
                     ),
@@ -475,8 +560,12 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, spreadRadius: 3)
-                    ]
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 15,
+                        spreadRadius: 3,
+                      ),
+                    ],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
@@ -492,7 +581,13 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
 
                         final msg = _messages[index];
                         final isUser = msg['isUser'] as bool;
-                        return _buildChatBubble(msg['text'], isUser, msg['time'], primaryCyan, textCyan);
+                        return _buildChatBubble(
+                          msg['text'],
+                          isUser,
+                          msg['time'],
+                          primaryCyan,
+                          textCyan,
+                        );
                       },
                     ),
                   ),
@@ -502,13 +597,20 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
 
               // --- BARRA DE ENTRADA ---
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, spreadRadius: 2)
-                  ]
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -518,7 +620,10 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                         onSubmitted: (_) => _sendMessage(),
                         decoration: const InputDecoration(
                           hintText: 'Pregúntame lo que quieras...',
-                          hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                          hintStyle: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 15),
                         ),
@@ -531,7 +636,11 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                        icon: const Icon(
+                          Icons.send_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                         onPressed: _sendMessage,
                       ),
                     ),
@@ -545,7 +654,13 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
     );
   }
 
-  Widget _buildChatBubble(String text, bool isUser, String time, Color activeColor, Color textCyan) {
+  Widget _buildChatBubble(
+    String text,
+    bool isUser,
+    String time,
+    Color activeColor,
+    Color textCyan,
+  ) {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -582,7 +697,7 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
                   fontSize: 10,
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -614,7 +729,11 @@ class _AsistenteIaScreenState extends State<AsistenteIaScreen> {
             const SizedBox(width: 12),
             const Text(
               'Pensando...',
-              style: TextStyle(color: Colors.grey, fontSize: 13, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ],
         ),

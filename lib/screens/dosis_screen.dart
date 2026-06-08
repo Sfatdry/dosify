@@ -19,12 +19,12 @@ class _DosisScreenState extends State<DosisScreen> {
   // Estado del botón seleccionado
   String _selectedEstado = 'pendiente';
   String? _medicamentoSeleccionadoId;
-  
+
   DateTime? _fechaSeleccionada;
   TimeOfDay? _horaSeleccionada;
 
   bool _isSaving = false;
-  
+
   final TextEditingController _fechaController = TextEditingController();
   final TextEditingController _horaController = TextEditingController();
 
@@ -32,14 +32,20 @@ class _DosisScreenState extends State<DosisScreen> {
   Future<void> _guardarDosisEnBaseDeDatos() async {
     if (_medicamentoSeleccionadoId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Por favor, selecciona un medicamento"), backgroundColor: Colors.orange),
+        const SnackBar(
+          content: Text("Por favor, selecciona un medicamento"),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
 
     if (_fechaSeleccionada == null || _horaSeleccionada == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Por favor, selecciona fecha y hora para la dosis"), backgroundColor: Colors.orange),
+        const SnackBar(
+          content: Text("Por favor, selecciona fecha y hora para la dosis"),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -69,7 +75,7 @@ class _DosisScreenState extends State<DosisScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("¡Dosis registrada con éxito en la base de datos!"), 
+            content: Text("¡Dosis registrada con éxito en la base de datos!"),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -86,7 +92,10 @@ class _DosisScreenState extends State<DosisScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error al guardar: $error"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Error al guardar: $error"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -109,25 +118,44 @@ class _DosisScreenState extends State<DosisScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: supabase.from('tratamiento').stream(primaryKey: ['id']).eq('usuario_id', currentUserId),
+        stream: supabase
+            .from('tratamiento')
+            .stream(primaryKey: ['id'])
+            .eq('usuario_id', currentUserId),
         builder: (context, tratSnapshot) {
           final userTratamientos = tratSnapshot.data ?? [];
-          final userTratamientoIds = userTratamientos.map((t) => t['id'].toString()).toSet();
+          final userTratamientoIds = userTratamientos
+              .map((t) => t['id'].toString())
+              .toSet();
 
           return StreamBuilder<List<Map<String, dynamic>>>(
-            stream: supabase.from('medicamento').stream(primaryKey: ['id']).order('nombre', ascending: true),
+            stream: supabase
+                .from('medicamento')
+                .stream(primaryKey: ['id'])
+                .order('nombre', ascending: true),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator(color: primaryCyan));
+                return const Center(
+                  child: CircularProgressIndicator(color: primaryCyan),
+                );
               }
 
               final allMedicamentos = snapshot.data ?? [];
-              final medicamentos = allMedicamentos.where((m) => userTratamientoIds.contains(m['tratamiento_id'].toString())).toList();
+              final medicamentos = allMedicamentos
+                  .where(
+                    (m) => userTratamientoIds.contains(
+                      m['tratamiento_id'].toString(),
+                    ),
+                  )
+                  .toList();
 
               // Controlamos dinámicamente la selección para evitar errores si la lista cambia
               if (medicamentos.isNotEmpty) {
-                final listaIds = medicamentos.map((m) => m['id'].toString()).toList();
-                if (_medicamentoSeleccionadoId == null || !listaIds.contains(_medicamentoSeleccionadoId)) {
+                final listaIds = medicamentos
+                    .map((m) => m['id'].toString())
+                    .toList();
+                if (_medicamentoSeleccionadoId == null ||
+                    !listaIds.contains(_medicamentoSeleccionadoId)) {
                   _medicamentoSeleccionadoId = listaIds.first;
                 }
               } else {
@@ -135,7 +163,10 @@ class _DosisScreenState extends State<DosisScreen> {
               }
 
               return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 40,
+                  horizontal: 20,
+                ),
                 child: Center(
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 500),
@@ -145,10 +176,10 @@ class _DosisScreenState extends State<DosisScreen> {
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03), 
+                          color: Colors.black.withOpacity(0.03),
                           blurRadius: 20,
                           offset: const Offset(0, 4),
-                        )
+                        ),
                       ],
                     ),
                     child: Column(
@@ -160,33 +191,55 @@ class _DosisScreenState extends State<DosisScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: primaryCyan, 
+                                color: primaryCyan,
                                 borderRadius: BorderRadius.circular(15),
                               ),
-                              child: const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 26),
+                              child: const Icon(
+                                Icons.check_circle_outline_rounded,
+                                color: Colors.white,
+                                size: 26,
+                              ),
                             ),
                             const SizedBox(width: 15),
                             const Text(
-                              "Registro de Dosis", 
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+                              "Registro de Dosis",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF006064),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 35),
 
                         const Text(
-                          "Seleccionar Medicamento", 
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
+                          "Seleccionar Medicamento",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         medicamentos.isEmpty
-                            ? const Text("No hay medicamentos registrados", style: TextStyle(color: Colors.grey, fontSize: 13))
+                            ? const Text(
+                                "No hay medicamentos registrados",
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
+                              )
                             : Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF0F9FF),
                                   borderRadius: BorderRadius.circular(15),
-                                  border: Border.all(color: const Color(0xFFBAE6FD)),
+                                  border: Border.all(
+                                    color: const Color(0xFFBAE6FD),
+                                  ),
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
@@ -197,20 +250,31 @@ class _DosisScreenState extends State<DosisScreen> {
                                         _medicamentoSeleccionadoId = nuevoVal;
                                       });
                                     },
-                                    items: medicamentos.map<DropdownMenuItem<String>>((med) {
-                                      return DropdownMenuItem<String>(
-                                        value: med['id'].toString(),
-                                        child: Text(med['nombre'] ?? 'Sin nombre', style: const TextStyle(color: Color(0xFF006064))),
-                                      );
-                                    }).toList(),
+                                    items: medicamentos
+                                        .map<DropdownMenuItem<String>>((med) {
+                                          return DropdownMenuItem<String>(
+                                            value: med['id'].toString(),
+                                            child: Text(
+                                              med['nombre'] ?? 'Sin nombre',
+                                              style: const TextStyle(
+                                                color: Color(0xFF006064),
+                                              ),
+                                            ),
+                                          );
+                                        })
+                                        .toList(),
                                   ),
                                 ),
                               ),
                         const SizedBox(height: 25),
 
                         const Text(
-                          "Fecha", 
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
+                          "Fecha",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
@@ -218,10 +282,17 @@ class _DosisScreenState extends State<DosisScreen> {
                           readOnly: true,
                           decoration: InputDecoration(
                             hintText: "dd/mm/aaaa",
-                            prefixIcon: const Icon(Icons.calendar_today, color: primaryCyan, size: 20),
+                            prefixIcon: const Icon(
+                              Icons.calendar_today,
+                              color: primaryCyan,
+                              size: 20,
+                            ),
                             filled: true,
                             fillColor: const Color(0xFFF0F9FF),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                           onTap: () async {
                             DateTime? pickedDate = await showDatePicker(
@@ -233,7 +304,8 @@ class _DosisScreenState extends State<DosisScreen> {
                             if (pickedDate != null) {
                               setState(() {
                                 _fechaSeleccionada = pickedDate;
-                                _fechaController.text = "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+                                _fechaController.text =
+                                    "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
                               });
                             }
                           },
@@ -241,8 +313,12 @@ class _DosisScreenState extends State<DosisScreen> {
                         const SizedBox(height: 25),
 
                         const Text(
-                          "Hora", 
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
+                          "Hora",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
@@ -250,10 +326,17 @@ class _DosisScreenState extends State<DosisScreen> {
                           readOnly: true,
                           decoration: InputDecoration(
                             hintText: "--:-- -----",
-                            prefixIcon: const Icon(Icons.access_time, color: primaryCyan, size: 20),
+                            prefixIcon: const Icon(
+                              Icons.access_time,
+                              color: primaryCyan,
+                              size: 20,
+                            ),
                             filled: true,
                             fillColor: const Color(0xFFF0F9FF),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                           onTap: () async {
                             TimeOfDay? pickedTime = await showTimePicker(
@@ -263,7 +346,9 @@ class _DosisScreenState extends State<DosisScreen> {
                             if (pickedTime != null) {
                               setState(() {
                                 _horaSeleccionada = pickedTime;
-                                _horaController.text = pickedTime.format(context);
+                                _horaController.text = pickedTime.format(
+                                  context,
+                                );
                               });
                             }
                           },
@@ -271,8 +356,12 @@ class _DosisScreenState extends State<DosisScreen> {
                         const SizedBox(height: 24),
 
                         const Text(
-                          "Estado", 
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
+                          "Estado",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         GridView.count(
@@ -283,10 +372,30 @@ class _DosisScreenState extends State<DosisScreen> {
                           mainAxisSpacing: 15,
                           childAspectRatio: 2.5,
                           children: [
-                            _buildEstadoButton("pendiente", "Pendiente", const Color(0xFFE0F2FE), const Color(0xFF0369A1)),
-                            _buildEstadoButton("tomada", "Tomada", const Color(0xFFDCFCE7), const Color(0xFF15803D)),
-                            _buildEstadoButton("omitida", "Omitida", const Color(0xFFFEE2E2), const Color(0xFFB91C1C)),
-                            _buildEstadoButton("tarde", "Tarde", const Color(0xFFFEF3C7), const Color(0xFFB45309)),
+                            _buildEstadoButton(
+                              "pendiente",
+                              "Pendiente",
+                              const Color(0xFFE0F2FE),
+                              const Color(0xFF0369A1),
+                            ),
+                            _buildEstadoButton(
+                              "tomada",
+                              "Tomada",
+                              const Color(0xFFDCFCE7),
+                              const Color(0xFF15803D),
+                            ),
+                            _buildEstadoButton(
+                              "omitida",
+                              "Omitida",
+                              const Color(0xFFFEE2E2),
+                              const Color(0xFFB91C1C),
+                            ),
+                            _buildEstadoButton(
+                              "tarde",
+                              "Tarde",
+                              const Color(0xFFFEF3C7),
+                              const Color(0xFFB45309),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 35),
@@ -294,22 +403,33 @@ class _DosisScreenState extends State<DosisScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _isSaving || medicamentos.isEmpty ? null : _guardarDosisEnBaseDeDatos,
+                            onPressed: _isSaving || medicamentos.isEmpty
+                                ? null
+                                : _guardarDosisEnBaseDeDatos,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryCyan,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
                             ),
                             child: _isSaving
                                 ? const SizedBox(
                                     width: 24,
                                     height: 24,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
                                   )
                                 : const Text(
-                                    "Guardar Estado", 
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                    "Guardar Estado",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
                                   ),
                           ),
                         ),
@@ -325,7 +445,12 @@ class _DosisScreenState extends State<DosisScreen> {
     );
   }
 
-  Widget _buildEstadoButton(String valorInterno, String textoVisual, Color activeBgColor, Color activeTextColor) {
+  Widget _buildEstadoButton(
+    String valorInterno,
+    String textoVisual,
+    Color activeBgColor,
+    Color activeTextColor,
+  ) {
     bool isSelected = _selectedEstado == valorInterno;
 
     return GestureDetector(

@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (_isLoading) return;
 
-    final email    = _emailController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
@@ -42,17 +42,19 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email,
         password: password,
       );
-      
+
       if (response.session != null || response.user != null) {
-        final nombre = response.user?.userMetadata?['full_name'] ?? 
-                       response.user?.email?.split('@')[0] ?? 
-                       'Usuario';
+        final nombre =
+            response.user?.userMetadata?['full_name'] ??
+            response.user?.email?.split('@')[0] ??
+            'Usuario';
         final uId = response.user!.id;
         if (mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => MainNavigation(userName: nombre, userId: uId),
+              builder: (context) =>
+                  MainNavigation(userName: nombre, userId: uId),
             ),
           );
         }
@@ -74,7 +76,8 @@ class _LoginScreenState extends State<LoginScreen> {
           .maybeSingle();
 
       if (result == null) {
-        if (mounted) _snack("Correo o contraseña incorrectos", Colors.redAccent);
+        if (mounted)
+          _snack("Correo o contraseña incorrectos", Colors.redAccent);
         return;
       }
 
@@ -98,9 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _snack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   @override
@@ -127,7 +130,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 150,
                       height: 150,
                       color: Colors.grey[300],
-                      child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                      child: const Icon(
+                        Icons.image,
+                        size: 50,
+                        color: Colors.grey,
+                      ),
                     );
                   },
                 ),
@@ -171,21 +178,33 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : () => _handleLogin(), // 👈 REPARADO: Forzado de callback dinámico para Flutter Web
+                  onPressed: _isLoading
+                      ? null
+                      : () =>
+                            _handleLogin(), // 👈 REPARADO: Forzado de callback dinámico para Flutter Web
                   style: ElevatedButton.styleFrom(
                     backgroundColor: tealColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                     elevation: 5,
                   ),
                   child: _isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text(
                           "Iniciar Sesión",
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                 ),
               ),
@@ -195,11 +214,16 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("¿No tienes cuenta? ", style: TextStyle(color: Colors.grey)),
+                  const Text(
+                    "¿No tienes cuenta? ",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                   GestureDetector(
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterScreen(),
+                      ),
                     ),
                     child: const Text(
                       "Regístrate",

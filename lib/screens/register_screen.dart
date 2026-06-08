@@ -11,8 +11,8 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  final TextEditingController _nameController     = TextEditingController();
-  final TextEditingController _emailController    = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
@@ -33,23 +33,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-      // Validate name (must contain at least two words, only letters and spaces)
-      final name = _nameController.text.trim();
-      final nameValid = name.split(' ').length >= 2 &&
-          RegExp(r'^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$').hasMatch(name);
-      if (!nameValid) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Ingresa un nombre completo válido (solo letras)") ,
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
+    // Validate name (must contain at least two words, only letters and spaces)
+    final name = _nameController.text.trim();
+    final nameValid =
+        name.split(' ').length >= 2 &&
+        RegExp(r'^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$').hasMatch(name);
+    if (!nameValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Ingresa un nombre completo válido (solo letras)"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     // Validate email domain (allow only personal email providers)
     final email = _emailController.text.trim();
-    final domain = email.split('@').length == 2 ? email.split('@')[1].toLowerCase() : '';
+    final domain = email.split('@').length == 2
+        ? email.split('@')[1].toLowerCase()
+        : '';
     const allowedDomains = [
       'gmail.com',
       'yahoo.com',
@@ -61,7 +64,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!allowedDomains.contains(domain)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Utiliza un correo personal (ej. gmail, yahoo, outlook)"),
+          content: Text(
+            "Utiliza un correo personal (ej. gmail, yahoo, outlook)",
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -94,7 +99,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("¡Cuenta creada con éxito! Ya puedes iniciar sesión."),
+            content: Text(
+              "¡Cuenta creada con éxito! Ya puedes iniciar sesión.",
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -104,10 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
         );
       }
     } catch (error) {
@@ -135,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
-    const Color textCyan    = Color(0xFF006064);
+    const Color textCyan = Color(0xFF006064);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -158,14 +162,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const Center(
                   child: Text(
                     "RECORDATORIOS DE MEDICACIÓN",
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 30),
 
                 const Text(
                   "Crear Cuenta",
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: textCyan),
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: textCyan,
+                  ),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -178,11 +191,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildGenderCircle("Mujer",     Icons.face_retouching_natural_rounded, primaryCyan),
+                    _buildGenderCircle(
+                      "Mujer",
+                      Icons.face_retouching_natural_rounded,
+                      primaryCyan,
+                    ),
                     const SizedBox(width: 35),
-                    _buildGenderCircle("Hombre",    Icons.face_rounded,                    primaryCyan),
+                    _buildGenderCircle(
+                      "Hombre",
+                      Icons.face_rounded,
+                      primaryCyan,
+                    ),
                     const SizedBox(width: 35),
-                    _buildGenderCircle("No Binario", Icons.child_care_rounded,             primaryCyan),
+                    _buildGenderCircle(
+                      "No Binario",
+                      Icons.child_care_rounded,
+                      primaryCyan,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 40),
@@ -212,10 +237,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscurePassword,
                   suffix: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: Colors.grey,
                     ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
                 const SizedBox(height: 45),
@@ -227,14 +255,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: _isLoading ? null : _registrarUsuario,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryCyan,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       elevation: 0,
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             "Finalizar Registro",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                   ),
                 ),
@@ -254,7 +288,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Column(
         children: [
           Container(
-            width: 68, height: 68,
+            width: 68,
+            height: 68,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFFF8FAFC),
@@ -263,7 +298,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: isSelected ? 2.5 : 1.0,
               ),
             ),
-            child: Icon(icon, size: 32, color: isSelected ? activeColor : Colors.grey.shade400),
+            child: Icon(
+              icon,
+              size: 32,
+              color: isSelected ? activeColor : Colors.grey.shade400,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -299,7 +338,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         suffixIcon: suffix,
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 20,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(color: Colors.grey.shade200),

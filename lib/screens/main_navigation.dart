@@ -9,7 +9,7 @@ import 'medicamento_screen.dart';
 import 'dosis_screen.dart';
 import 'dieta_screen.dart';
 import 'nota_de_voz_screen.dart';
-import 'farmacia_screen.dart'; 
+import 'farmacia_screen.dart';
 import 'historial_screen.dart';
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
@@ -20,7 +20,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class MainNavigation extends StatefulWidget {
   final String userName;
   final String userId;
-  const MainNavigation({super.key, required this.userName, required this.userId});
+  const MainNavigation({
+    super.key,
+    required this.userName,
+    required this.userId,
+  });
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -28,8 +32,10 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
-  late List<Widget> _screens; // <-- Déjalo exactamente así, con 'late' y sin 'const'
-  final ScrollController _scrollController = ScrollController(); // Controlador para la barrita deslizable
+  late List<Widget>
+  _screens; // <-- Déjalo exactamente así, con 'late' y sin 'const'
+  final ScrollController _scrollController =
+      ScrollController(); // Controlador para la barrita deslizable
 
   Timer? _reminderTimer;
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -38,44 +44,44 @@ class _MainNavigationState extends State<MainNavigation> {
   DateTime? _lastCacheRefresh;
 
   // DENTRO DE TU MAIN_NAVIGATION.DART
-@override
-void initState() {
-  super.initState();
-  _startReminderTimer();
-  
-  _screens = [
-    DashboardScreen(userName: widget.userName, userId: widget.userId),
-    AsistenteIaScreen(userName: widget.userName, userId: widget.userId),
-    ProfileScreen(userId: widget.userId),
-    TratamientoScreen(userName: widget.userName, userId: widget.userId),
-    HistorialScreen(userName: widget.userName, userId: widget.userId),   
-    MedicamentoScreen(userName: widget.userName, userId: widget.userId), 
-    DosisScreen(userName: widget.userName, userId: widget.userId),      
-    RecordatorioScreen(userName: widget.userName, userId: widget.userId),
-    InventoryScreen(
-      userName: widget.userName,
-      userId: widget.userId,
-      onVerFarmacias: () => setState(() => _selectedIndex = 11),
-    ),
-    DietaScreen(userName: widget.userName, userId: widget.userId),      
-    NotaDeVozScreen(userName: widget.userName, userId: widget.userId),  
-    FarmaciaScreen(userName: widget.userName, userId: widget.userId),    
-  ];
-}
+  @override
+  void initState() {
+    super.initState();
+    _startReminderTimer();
+
+    _screens = [
+      DashboardScreen(userName: widget.userName, userId: widget.userId),
+      AsistenteIaScreen(userName: widget.userName, userId: widget.userId),
+      ProfileScreen(userId: widget.userId),
+      TratamientoScreen(userName: widget.userName, userId: widget.userId),
+      HistorialScreen(userName: widget.userName, userId: widget.userId),
+      MedicamentoScreen(userName: widget.userName, userId: widget.userId),
+      DosisScreen(userName: widget.userName, userId: widget.userId),
+      RecordatorioScreen(userName: widget.userName, userId: widget.userId),
+      InventoryScreen(
+        userName: widget.userName,
+        userId: widget.userId,
+        onVerFarmacias: () => setState(() => _selectedIndex = 11),
+      ),
+      DietaScreen(userName: widget.userName, userId: widget.userId),
+      NotaDeVozScreen(userName: widget.userName, userId: widget.userId),
+      FarmaciaScreen(userName: widget.userName, userId: widget.userId),
+    ];
+  }
 
   final List<Map<String, dynamic>> _menuItems = [
     {'label': 'Dashboard', 'icon': Icons.grid_view_rounded},
     {'label': 'Asistente IA', 'icon': Icons.chat_bubble_outline_rounded},
     {'label': 'Usuario', 'icon': Icons.person_outline_rounded},
     {'label': 'Tratamiento', 'icon': Icons.assignment_outlined},
-    {'label': 'Historial', 'icon': Icons.bar_chart_rounded}, 
+    {'label': 'Historial', 'icon': Icons.bar_chart_rounded},
     {'label': 'Medicamento', 'icon': Icons.link_rounded},
     {'label': 'Dosis', 'icon': Icons.check_circle_outline_rounded},
     {'label': 'Recordatorio', 'icon': Icons.notifications_none_rounded},
     {'label': 'Inventario', 'icon': Icons.archive_outlined},
     {'label': 'Dieta', 'icon': Icons.restaurant_rounded},
     {'label': 'Nota de Voz', 'icon': Icons.mic_none_rounded},
-    {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded}, 
+    {'label': 'Farmacia', 'icon': Icons.local_pharmacy_rounded},
   ];
 
   void _scrollLeft() {
@@ -96,7 +102,9 @@ void initState() {
 
   @override
   Widget build(BuildContext context) {
-    String initial = widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : "A";
+    String initial = widget.userName.isNotEmpty
+        ? widget.userName[0].toUpperCase()
+        : "A";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -117,14 +125,28 @@ void initState() {
                         color: const Color(0xFF00ACC1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.local_hospital_rounded, color: Colors.white, size: 24),
+                      child: const Icon(
+                        Icons.local_hospital_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
-                        Text("Dosify", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
-                        Text("Control inteligente de medicamentos", style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        Text(
+                          "Dosify",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                          ),
+                        ),
+                        Text(
+                          "Control inteligente de medicamentos",
+                          style: TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
                       ],
                     ),
                   ],
@@ -134,15 +156,32 @@ void initState() {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text("Bienvenida", style: TextStyle(fontSize: 11, color: Colors.grey)),
-                        Text(widget.userName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF006064))),
+                        const Text(
+                          "Bienvenida",
+                          style: TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
+                        Text(
+                          widget.userName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(width: 12),
                     CircleAvatar(
                       radius: 18,
                       backgroundColor: const Color(0xFF00C853),
-                      child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -158,7 +197,10 @@ void initState() {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF64748B)),
+                  icon: const Icon(
+                    Icons.chevron_left_rounded,
+                    color: Color(0xFF64748B),
+                  ),
                   onPressed: _scrollLeft,
                 ),
                 Expanded(
@@ -174,10 +216,18 @@ void initState() {
                           return GestureDetector(
                             onTap: () => setState(() => _selectedIndex = index),
                             child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 5,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
-                                color: isSelected ? const Color(0xFF00ACC1) : Colors.transparent,
+                                color: isSelected
+                                    ? const Color(0xFF00ACC1)
+                                    : Colors.transparent,
                                 borderRadius: BorderRadius.circular(30),
                               ),
                               child: Row(
@@ -185,15 +235,21 @@ void initState() {
                                   Icon(
                                     _menuItems[index]['icon'],
                                     size: 18,
-                                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                                    color: isSelected
+                                        ? Colors.white
+                                        : const Color(0xFF64748B),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     _menuItems[index]['label'],
                                     style: TextStyle(
                                       fontSize: 13,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                      color: isSelected ? Colors.white : const Color(0xFF64748B),
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : const Color(0xFF64748B),
                                     ),
                                   ),
                                 ],
@@ -206,7 +262,10 @@ void initState() {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF64748B)),
+                  icon: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF64748B),
+                  ),
                   onPressed: _scrollRight,
                 ),
               ],
@@ -216,10 +275,7 @@ void initState() {
 
           // --- CONTENIDO VARIABLE ---
           Expanded(
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: _screens,
-            ),
+            child: IndexedStack(index: _selectedIndex, children: _screens),
           ),
         ],
       ),
@@ -252,7 +308,7 @@ void initState() {
           .from('medicamento')
           .select('id, nombre, dosis')
           .inFilter('tratamiento_id', treatmentIds);
-      
+
       if (meds.isEmpty) {
         _cachedReminders = [];
         _lastCacheRefresh = DateTime.now();
@@ -292,8 +348,9 @@ void initState() {
 
   void _checkActiveReminders() async {
     final ahora = DateTime.now();
-    
-    if (_lastCacheRefresh == null || ahora.difference(_lastCacheRefresh!) > const Duration(minutes: 1)) {
+
+    if (_lastCacheRefresh == null ||
+        ahora.difference(_lastCacheRefresh!) > const Duration(minutes: 1)) {
       await _refreshReminderCache();
     }
 
@@ -301,9 +358,11 @@ void initState() {
       if (rec['fecha_hora'] == null) continue;
       try {
         final scheduledTime = DateTime.parse(rec['fecha_hora']).toLocal();
-        
-        if (ahora.hour == scheduledTime.hour && ahora.minute == scheduledTime.minute) {
-          final String rungKey = "${rec['id']}_${ahora.year}_${ahora.month}_${ahora.day}_${ahora.hour}_${ahora.minute}";
+
+        if (ahora.hour == scheduledTime.hour &&
+            ahora.minute == scheduledTime.minute) {
+          final String rungKey =
+              "${rec['id']}_${ahora.year}_${ahora.month}_${ahora.day}_${ahora.hour}_${ahora.minute}";
           if (!_rungRemindersToday.contains(rungKey)) {
             _rungRemindersToday.add(rungKey);
             _triggerAlert(rec);
@@ -344,8 +403,8 @@ void initState() {
                   color: Colors.black.withOpacity(0.1),
                   blurRadius: 20,
                   spreadRadius: 5,
-                )
-              ]
+                ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -376,14 +435,23 @@ void initState() {
                 RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
-                    style: const TextStyle(fontSize: 16, color: Colors.black87, height: 1.5),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                      height: 1.5,
+                    ),
                     children: [
                       const TextSpan(text: 'Es momento de tomar:\n'),
                       TextSpan(
-                         text: '${rec['nombre_med']}',
-                         style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00ACC1), fontSize: 18),
+                        text: '${rec['nombre_med']}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF00ACC1),
+                          fontSize: 18,
+                        ),
                       ),
-                      if (rec['dosis'] != null && rec['dosis'].toString().isNotEmpty) ...[
+                      if (rec['dosis'] != null &&
+                          rec['dosis'].toString().isNotEmpty) ...[
                         const TextSpan(text: '\nDosis: '),
                         TextSpan(
                           text: '${rec['dosis']}',
@@ -394,7 +462,7 @@ void initState() {
                   ),
                 ),
                 const SizedBox(height: 30),
-                
+
                 Column(
                   children: [
                     SizedBox(
@@ -411,26 +479,35 @@ void initState() {
                         ),
                         onPressed: () async {
                           Navigator.pop(dialogContext);
-                          await _registerDoseStatus(rec['medicamento_id'].toString(), 'tomada');
+                          await _registerDoseStatus(
+                            rec['medicamento_id'].toString(),
+                            'tomada',
+                          );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
                             Icon(Icons.check_circle_rounded),
                             SizedBox(width: 10),
-                            Text('Marcar como tomada ✅', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                              'Marcar como tomada ✅',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.redAccent, width: 1.5),
+                          side: const BorderSide(
+                            color: Colors.redAccent,
+                            width: 1.5,
+                          ),
                           foregroundColor: Colors.redAccent,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
@@ -438,14 +515,20 @@ void initState() {
                         ),
                         onPressed: () async {
                           Navigator.pop(dialogContext);
-                          await _registerDoseStatus(rec['medicamento_id'].toString(), 'omitida');
+                          await _registerDoseStatus(
+                            rec['medicamento_id'].toString(),
+                            'omitida',
+                          );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
                             Icon(Icons.close_rounded),
                             SizedBox(width: 10),
-                            Text('Omitir dosis ❌', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                              'Omitir dosis ❌',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ],
                         ),
                       ),
@@ -463,7 +546,10 @@ void initState() {
                           Navigator.pop(dialogContext);
                           _snoozeReminder(rec);
                         },
-                        child: const Text('Posponer 5 minutos ⏰', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Posponer 5 minutos ⏰',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],
@@ -488,9 +574,11 @@ void initState() {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(status == 'tomada'
-                ? '¡Dosis registrada como tomada! 💪'
-                : 'Dosis registrada como omitida.'),
+            content: Text(
+              status == 'tomada'
+                  ? '¡Dosis registrada como tomada! 💪'
+                  : 'Dosis registrada como omitida.',
+            ),
             backgroundColor: status == 'tomada' ? Colors.green : Colors.orange,
           ),
         );
@@ -502,7 +590,7 @@ void initState() {
 
   void _snoozeReminder(Map<String, dynamic> rec) {
     final snoozeTime = DateTime.now().add(const Duration(minutes: 5));
-    
+
     final snoozedRec = {
       'id': '${rec['id']}_snooze',
       'fecha_hora': snoozeTime.toIso8601String(),
@@ -517,7 +605,9 @@ void initState() {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Recordatorio pospuesto a las ${DateFormat('hh:mm a').format(snoozeTime)} ⏰'),
+        content: Text(
+          'Recordatorio pospuesto a las ${DateFormat('hh:mm a').format(snoozeTime)} ⏰',
+        ),
         backgroundColor: const Color(0xFF00ACC1),
       ),
     );

@@ -15,9 +15,9 @@ class DietaScreen extends StatefulWidget {
 class _DietaScreenState extends State<DietaScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  final TextEditingController _descripcionController  = TextEditingController();
-  final TextEditingController _fechaInicioController  = TextEditingController();
-  final TextEditingController _fechaFinController     = TextEditingController();
+  final TextEditingController _descripcionController = TextEditingController();
+  final TextEditingController _fechaInicioController = TextEditingController();
+  final TextEditingController _fechaFinController = TextEditingController();
 
   bool _isSaving = false;
   DateTime? _fechaInicioRaw;
@@ -45,7 +45,11 @@ class _DietaScreenState extends State<DietaScreen> {
     }
   }
 
-  Future<void> _selectDate(BuildContext ctx, TextEditingController ctrl, bool isInicio) async {
+  Future<void> _selectDate(
+    BuildContext ctx,
+    TextEditingController ctrl,
+    bool isInicio,
+  ) async {
     final picked = await showDatePicker(
       context: ctx,
       initialDate: DateTime.now(),
@@ -61,8 +65,11 @@ class _DietaScreenState extends State<DietaScreen> {
     if (picked != null) {
       setState(() {
         ctrl.text = DateFormat('dd/MM/yyyy').format(picked);
-        if (isInicio) _fechaInicioRaw = picked;
-        else _fechaFinRaw = picked;
+        if (isInicio) {
+          _fechaInicioRaw = picked;
+        } else {
+          _fechaFinRaw = picked;
+        }
       });
     }
   }
@@ -81,9 +88,9 @@ class _DietaScreenState extends State<DietaScreen> {
     try {
       await supabase.from('dieta').insert({
         'tratamiento_id': _tratamientoSeleccionadoId,
-        'descripcion':    _descripcionController.text.trim(),
-        'fecha_inicio':   _fechaInicioRaw?.toIso8601String().split('T').first,
-        'fecha_fin':      _fechaFinRaw?.toIso8601String().split('T').first,
+        'descripcion': _descripcionController.text.trim(),
+        'fecha_inicio': _fechaInicioRaw?.toIso8601String().split('T').first,
+        'fecha_fin': _fechaFinRaw?.toIso8601String().split('T').first,
       });
 
       if (mounted) {
@@ -105,9 +112,9 @@ class _DietaScreenState extends State<DietaScreen> {
   }
 
   void _snack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   Future<void> _eliminarDieta(String id) async {
@@ -134,10 +141,15 @@ class _DietaScreenState extends State<DietaScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: supabase.from('tratamiento').stream(primaryKey: ['id']).eq('usuario_id', currentUserId),
+        stream: supabase
+            .from('tratamiento')
+            .stream(primaryKey: ['id'])
+            .eq('usuario_id', currentUserId),
         builder: (context, tratSnapshot) {
           final userTratamientos = tratSnapshot.data ?? [];
-          final userTratamientoIds = userTratamientos.map((t) => t['id'].toString()).toSet();
+          final userTratamientoIds = userTratamientos
+              .map((t) => t['id'].toString())
+              .toSet();
 
           return Center(
             child: SingleChildScrollView(
@@ -156,7 +168,7 @@ class _DietaScreenState extends State<DietaScreen> {
                           color: Colors.black.withOpacity(0.03),
                           blurRadius: 20,
                           offset: const Offset(0, 4),
-                        )
+                        ),
                       ],
                     ),
                     child: Column(
@@ -172,12 +184,20 @@ class _DietaScreenState extends State<DietaScreen> {
                                 color: primaryCyan,
                                 borderRadius: BorderRadius.circular(15),
                               ),
-                              child: const Icon(Icons.restaurant_rounded, color: Colors.white, size: 28),
+                              child: const Icon(
+                                Icons.restaurant_rounded,
+                                color: Colors.white,
+                                size: 28,
+                              ),
                             ),
                             const SizedBox(width: 15),
                             const Text(
                               "Dieta",
-                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF006064),
+                              ),
                             ),
                           ],
                         ),
@@ -188,25 +208,45 @@ class _DietaScreenState extends State<DietaScreen> {
                         _tratamientos.isEmpty
                             ? const Text(
                                 "Crea un tratamiento primero",
-                                style: TextStyle(color: Colors.grey, fontSize: 13),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
                               )
                             : Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF0F9FF),
                                   borderRadius: BorderRadius.circular(15),
-                                  border: Border.all(color: const Color(0xFFBAE6FD)),
+                                  border: Border.all(
+                                    color: const Color(0xFFBAE6FD),
+                                  ),
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
                                     isExpanded: true,
-                                    hint: const Text("Selecciona un tratamiento", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
+                                    hint: const Text(
+                                      "Selecciona un tratamiento",
+                                      style: TextStyle(
+                                        color: Color(0xFF94A3B8),
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                     value: _tratamientoSeleccionadoId,
-                                    onChanged: (val) => setState(() => _tratamientoSeleccionadoId = val),
+                                    onChanged: (val) => setState(
+                                      () => _tratamientoSeleccionadoId = val,
+                                    ),
                                     items: _tratamientos.map((t) {
                                       return DropdownMenuItem<String>(
                                         value: t['id'].toString(),
-                                        child: Text(t['nombre'] ?? 'Sin nombre', style: const TextStyle(color: Color(0xFF006064))),
+                                        child: Text(
+                                          t['nombre'] ?? 'Sin nombre',
+                                          style: const TextStyle(
+                                            color: Color(0xFF006064),
+                                          ),
+                                        ),
                                       );
                                     }).toList(),
                                   ),
@@ -219,7 +259,10 @@ class _DietaScreenState extends State<DietaScreen> {
                         TextField(
                           controller: _descripcionController,
                           maxLines: 5,
-                          decoration: _inputStyle("Describe la dieta recomendada...", null),
+                          decoration: _inputStyle(
+                            "Describe la dieta recomendada...",
+                            null,
+                          ),
                         ),
                         const SizedBox(height: 25),
 
@@ -228,8 +271,15 @@ class _DietaScreenState extends State<DietaScreen> {
                         TextField(
                           controller: _fechaInicioController,
                           readOnly: true,
-                          onTap: () => _selectDate(context, _fechaInicioController, true),
-                          decoration: _inputStyle("dd/mm/aaaa", Icons.calendar_today_outlined),
+                          onTap: () => _selectDate(
+                            context,
+                            _fechaInicioController,
+                            true,
+                          ),
+                          decoration: _inputStyle(
+                            "dd/mm/aaaa",
+                            Icons.calendar_today_outlined,
+                          ),
                         ),
                         const SizedBox(height: 25),
 
@@ -238,8 +288,12 @@ class _DietaScreenState extends State<DietaScreen> {
                         TextField(
                           controller: _fechaFinController,
                           readOnly: true,
-                          onTap: () => _selectDate(context, _fechaFinController, false),
-                          decoration: _inputStyle("dd/mm/aaaa", Icons.calendar_today_outlined),
+                          onTap: () =>
+                              _selectDate(context, _fechaFinController, false),
+                          decoration: _inputStyle(
+                            "dd/mm/aaaa",
+                            Icons.calendar_today_outlined,
+                          ),
                         ),
                         const SizedBox(height: 40),
 
@@ -252,16 +306,26 @@ class _DietaScreenState extends State<DietaScreen> {
                               backgroundColor: primaryCyan,
                               padding: const EdgeInsets.symmetric(vertical: 18),
                               elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
                             ),
                             child: _isSaving
                                 ? const SizedBox(
-                                    width: 22, height: 22,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
                                   )
                                 : const Text(
                                     "Guardar Dieta",
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
                                   ),
                           ),
                         ),
@@ -280,18 +344,38 @@ class _DietaScreenState extends State<DietaScreen> {
                           .stream(primaryKey: ['id'])
                           .order('fecha_inicio', ascending: false),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator(color: primaryCyan));
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: primaryCyan,
+                            ),
+                          );
                         }
                         final allDietas = snapshot.data ?? [];
-                        final dietas = allDietas.where((d) => userTratamientoIds.contains(d['tratamiento_id'].toString())).toList();
+                        final dietas = allDietas
+                            .where(
+                              (d) => userTratamientoIds.contains(
+                                d['tratamiento_id'].toString(),
+                              ),
+                            )
+                            .toList();
 
                         if (dietas.isEmpty) {
                           return Container(
                             padding: const EdgeInsets.all(25),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
                             child: const Center(
-                              child: Text("No hay dietas registradas aún.", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                              child: Text(
+                                "No hay dietas registradas aún.",
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
                             ),
                           );
                         }
@@ -300,7 +384,11 @@ class _DietaScreenState extends State<DietaScreen> {
                           children: [
                             const Text(
                               "Dietas registradas",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF006064),
+                              ),
                             ),
                             const SizedBox(height: 15),
                             ...dietas.map((d) => _dietaCard(d, primaryCyan)),
@@ -318,18 +406,21 @@ class _DietaScreenState extends State<DietaScreen> {
     );
   }
 
-
-
   Widget _dietaCard(Map<String, dynamic> d, Color primaryCyan) {
     final inicio = d['fecha_inicio'] ?? '';
-    final fin    = d['fecha_fin']    ?? '';
+    final fin = d['fecha_fin'] ?? '';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -350,7 +441,11 @@ class _DietaScreenState extends State<DietaScreen> {
                   d['descripcion'] ?? 'Sin descripción',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF006064)),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Color(0xFF006064),
+                  ),
                 ),
                 if (inicio.isNotEmpty || fin.isNotEmpty)
                   Text(
@@ -361,7 +456,11 @@ class _DietaScreenState extends State<DietaScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+            icon: const Icon(
+              Icons.delete_outline,
+              color: Colors.redAccent,
+              size: 20,
+            ),
             onPressed: () => _eliminarDieta(d['id'].toString()),
           ),
         ],
@@ -374,7 +473,11 @@ class _DietaScreenState extends State<DietaScreen> {
       padding: const EdgeInsets.only(bottom: 8, left: 2),
       child: Text(
         text,
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 15),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF006064),
+          fontSize: 15,
+        ),
       ),
     );
   }
@@ -383,13 +486,24 @@ class _DietaScreenState extends State<DietaScreen> {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-      suffixIcon: icon != null ? Icon(icon, color: const Color(0xFFBAE6FD), size: 20) : null,
+      suffixIcon: icon != null
+          ? Icon(icon, color: const Color(0xFFBAE6FD), size: 20)
+          : null,
       filled: true,
       fillColor: const Color(0xFFF0F9FF),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      border:        OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFBAE6FD))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFBAE6FD))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFF00ACC1), width: 1.5)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFFBAE6FD)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFFBAE6FD)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFF00ACC1), width: 1.5),
+      ),
     );
   }
 }

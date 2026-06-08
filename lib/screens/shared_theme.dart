@@ -9,7 +9,10 @@ class AppColors {
 }
 
 // Decoración común para los inputs
-InputDecoration customInputDecoration({required String hintText, IconData? icon}) {
+InputDecoration customInputDecoration({
+  required String hintText,
+  IconData? icon,
+}) {
   return InputDecoration(
     hintText: hintText,
     prefixIcon: icon != null ? Icon(icon, color: AppColors.cyan600) : null,

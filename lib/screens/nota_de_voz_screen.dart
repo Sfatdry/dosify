@@ -5,7 +5,11 @@ class NotaDeVozScreen extends StatefulWidget {
   final String userName;
   final String userId;
 
-  const NotaDeVozScreen({super.key, required this.userName, required this.userId});
+  const NotaDeVozScreen({
+    super.key,
+    required this.userName,
+    required this.userId,
+  });
 
   @override
   State<NotaDeVozScreen> createState() => _NotaDeVozScreenState();
@@ -124,10 +128,15 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: supabase.from('tratamiento').stream(primaryKey: ['id']).eq('usuario_id', currentUserId),
+        stream: supabase
+            .from('tratamiento')
+            .stream(primaryKey: ['id'])
+            .eq('usuario_id', currentUserId),
         builder: (context, tratSnapshot) {
           final userTratamientos = tratSnapshot.data ?? [];
-          final userTratamientoIds = userTratamientos.map((t) => t['id'].toString()).toSet();
+          final userTratamientoIds = userTratamientos
+              .map((t) => t['id'].toString())
+              .toSet();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
@@ -194,10 +203,15 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
                         _tratamientos.isEmpty
                             ? const Text(
                                 "Crea un tratamiento primero",
-                                style: TextStyle(color: Colors.grey, fontSize: 13),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
                               )
                             : Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF0F9FF),
                                   borderRadius: BorderRadius.circular(15),
@@ -398,13 +412,22 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
                           .stream(primaryKey: ['id'])
                           .order('fecha', ascending: false),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Center(
-                            child: CircularProgressIndicator(color: primaryCyan),
+                            child: CircularProgressIndicator(
+                              color: primaryCyan,
+                            ),
                           );
                         }
                         final allNotas = snapshot.data ?? [];
-                        final notas = allNotas.where((n) => userTratamientoIds.contains(n['tratamiento_id'].toString())).toList();
+                        final notas = allNotas
+                            .where(
+                              (n) => userTratamientoIds.contains(
+                                n['tratamiento_id'].toString(),
+                              ),
+                            )
+                            .toList();
 
                         if (notas.isEmpty) {
                           return Container(
@@ -416,7 +439,10 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
                             child: const Center(
                               child: Text(
                                 "No hay notas registradas aún.",
-                                style: TextStyle(color: Colors.grey, fontSize: 14),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           );

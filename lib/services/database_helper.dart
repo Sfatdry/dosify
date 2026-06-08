@@ -22,11 +22,15 @@ class DatabaseHelper {
 
     dynamic tId;
     if (datos.isEmpty) {
-      final nuevo = await _supabase.from('tratamiento').insert({
-        'usuario_id': user.id,
-        'nombre': 'Tratamiento Principal',
-        'estado': 'activo'
-      }).select().single();
+      final nuevo = await _supabase
+          .from('tratamiento')
+          .insert({
+            'usuario_id': user.id,
+            'nombre': 'Tratamiento Principal',
+            'estado': 'activo',
+          })
+          .select()
+          .single();
       tId = nuevo['id'];
     } else {
       tId = datos[0]['id'];
@@ -43,20 +47,22 @@ class DatabaseHelper {
     });
   }
 }
+
 class RegistroMedicamentoScreen extends StatefulWidget {
   const RegistroMedicamentoScreen({super.key});
 
   @override
-  State<RegistroMedicamentoScreen> createState() => _RegistroMedicamentoScreenState();
+  State<RegistroMedicamentoScreen> createState() =>
+      _RegistroMedicamentoScreenState();
 }
 
 class _RegistroMedicamentoScreenState extends State<RegistroMedicamentoScreen> {
   final _nombreController = TextEditingController();
   final _dosisController = TextEditingController();
   final _duracionController = TextEditingController();
-  
+
   String _frecuencia = 'Cada 8 horas (3x al día)';
-  bool _isSaving = false; 
+  bool _isSaving = false;
 
   int _obtenerHoras(String texto) {
     if (texto.contains('6')) return 6;
@@ -67,7 +73,8 @@ class _RegistroMedicamentoScreenState extends State<RegistroMedicamentoScreen> {
 
   // --- ESTA ES LA FUNCIÓN QUE TE FALTABA ---
   Future<void> _guardarDatos() async {
-    if (_nombreController.text.trim().isEmpty || _duracionController.text.trim().isEmpty) {
+    if (_nombreController.text.trim().isEmpty ||
+        _duracionController.text.trim().isEmpty) {
       _mostrarMensaje("Por favor llena los campos", Colors.orange);
       return;
     }
@@ -96,16 +103,22 @@ class _RegistroMedicamentoScreenState extends State<RegistroMedicamentoScreen> {
   }
 
   void _mostrarMensaje(String mensaje, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje), backgroundColor: color));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Nuevo Registro", style: TextStyle(color: DosifyTheme.azulPrincipal, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Nuevo Registro",
+          style: TextStyle(
+            color: DosifyTheme.azulPrincipal,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: DosifyTheme.azulPrincipal),
           onPressed: () => Navigator.pop(context),
@@ -116,24 +129,49 @@ class _RegistroMedicamentoScreenState extends State<RegistroMedicamentoScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Registro de\nMedicamento", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: DosifyTheme.azulPrincipal)),
+            const Text(
+              "Registro de\nMedicamento",
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: DosifyTheme.azulPrincipal,
+              ),
+            ),
             const SizedBox(height: 30),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                  ),
+                ],
               ),
               child: Column(
                 children: [
-                  _buildInput("Nombre del Medicamento", "ej. Paracetamol", _nombreController),
+                  _buildInput(
+                    "Nombre del Medicamento",
+                    "ej. Paracetamol",
+                    _nombreController,
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      Expanded(child: _buildInput("Dosis", "500mg", _dosisController)),
+                      Expanded(
+                        child: _buildInput("Dosis", "500mg", _dosisController),
+                      ),
                       const SizedBox(width: 15),
-                      Expanded(child: _buildInput("Días", "7", _duracionController, isNumber: true)),
+                      Expanded(
+                        child: _buildInput(
+                          "Días",
+                          "7",
+                          _duracionController,
+                          isNumber: true,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -147,10 +185,18 @@ class _RegistroMedicamentoScreenState extends State<RegistroMedicamentoScreen> {
               height: 55,
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _guardarDatos,
-                style: ElevatedButton.styleFrom(backgroundColor: DosifyTheme.azulPrincipal),
-                child: _isSaving 
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("Guardar Tratamiento", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: DosifyTheme.azulPrincipal,
+                ),
+                child: _isSaving
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "Guardar Tratamiento",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -159,11 +205,19 @@ class _RegistroMedicamentoScreenState extends State<RegistroMedicamentoScreen> {
     );
   }
 
-  Widget _buildInput(String label, String hint, TextEditingController controller, {bool isNumber = false}) {
+  Widget _buildInput(
+    String label,
+    String hint,
+    TextEditingController controller, {
+    bool isNumber = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
         TextField(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
@@ -177,12 +231,22 @@ class _RegistroMedicamentoScreenState extends State<RegistroMedicamentoScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Frecuencia", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        const Text(
+          "Frecuencia",
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
         DropdownButton<String>(
           value: _frecuencia,
           isExpanded: true,
-          items: ['Cada 6 horas (4x al día)', 'Cada 8 horas (3x al día)', 'Cada 12 horas (2x al día)', 'Una vez al día']
-              .map((val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
+          items:
+              [
+                    'Cada 6 horas (4x al día)',
+                    'Cada 8 horas (3x al día)',
+                    'Cada 12 horas (2x al día)',
+                    'Una vez al día',
+                  ]
+                  .map((val) => DropdownMenuItem(value: val, child: Text(val)))
+                  .toList(),
           onChanged: (val) => setState(() => _frecuencia = val!),
         ),
       ],

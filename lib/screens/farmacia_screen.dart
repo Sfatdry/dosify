@@ -5,7 +5,11 @@ class FarmaciaScreen extends StatefulWidget {
   final String userName;
   final String userId;
 
-  const FarmaciaScreen({super.key, required this.userName, required this.userId});
+  const FarmaciaScreen({
+    super.key,
+    required this.userName,
+    required this.userId,
+  });
 
   @override
   State<FarmaciaScreen> createState() => _FarmaciaScreenState();
@@ -14,10 +18,11 @@ class FarmaciaScreen extends StatefulWidget {
 class _FarmaciaScreenState extends State<FarmaciaScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  final TextEditingController _nombreFarmaciaController = TextEditingController();
-  final TextEditingController _ubicacionController      = TextEditingController();
-  final TextEditingController _latitudController        = TextEditingController();
-  final TextEditingController _longitudController       = TextEditingController();
+  final TextEditingController _nombreFarmaciaController =
+      TextEditingController();
+  final TextEditingController _ubicacionController = TextEditingController();
+  final TextEditingController _latitudController = TextEditingController();
+  final TextEditingController _longitudController = TextEditingController();
 
   bool _isSaving = false;
 
@@ -31,7 +36,7 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
   }
 
   Future<void> _guardarFarmacia() async {
-    final nombre    = _nombreFarmaciaController.text.trim();
+    final nombre = _nombreFarmaciaController.text.trim();
     final direccion = _ubicacionController.text.trim();
 
     if (nombre.isEmpty || direccion.isEmpty) {
@@ -48,10 +53,10 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
 
     try {
       await supabase.from('farmacia').insert({
-        'nombre':    nombre,
+        'nombre': nombre,
         'direccion': direccion,
-        'latitud':   double.tryParse(_latitudController.text.trim()),
-        'longitud':  double.tryParse(_longitudController.text.trim()),
+        'latitud': double.tryParse(_latitudController.text.trim()),
+        'longitud': double.tryParse(_longitudController.text.trim()),
       });
 
       if (mounted) {
@@ -86,7 +91,10 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error al eliminar: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Error al eliminar: $e"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -115,7 +123,7 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                       color: Colors.black.withOpacity(0.03),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: Column(
@@ -131,12 +139,20 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                             color: primaryCyan,
                             borderRadius: BorderRadius.circular(15),
                           ),
-                          child: const Icon(Icons.local_pharmacy_rounded, color: Colors.white, size: 26),
+                          child: const Icon(
+                            Icons.local_pharmacy_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
                         ),
                         const SizedBox(width: 15),
                         const Text(
                           "Registrar Farmacia",
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                          ),
                         ),
                       ],
                     ),
@@ -145,14 +161,20 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                     _buildLabel("Nombre"),
                     TextField(
                       controller: _nombreFarmaciaController,
-                      decoration: _inputStyle("Nombre de la farmacia", Icons.location_on_outlined),
+                      decoration: _inputStyle(
+                        "Nombre de la farmacia",
+                        Icons.location_on_outlined,
+                      ),
                     ),
                     const SizedBox(height: 25),
 
                     _buildLabel("Ubicación / Dirección"),
                     TextField(
                       controller: _ubicacionController,
-                      decoration: _inputStyle("Dirección completa", Icons.near_me_outlined),
+                      decoration: _inputStyle(
+                        "Dirección completa",
+                        Icons.near_me_outlined,
+                      ),
                     ),
                     const SizedBox(height: 25),
 
@@ -165,7 +187,11 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                               _buildLabel("Latitud"),
                               TextField(
                                 controller: _latitudController,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                      signed: true,
+                                    ),
                                 decoration: _inputStyle("-12.0464", null),
                               ),
                             ],
@@ -179,7 +205,11 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                               _buildLabel("Longitud"),
                               TextField(
                                 controller: _longitudController,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                      signed: true,
+                                    ),
                                 decoration: _inputStyle("-77.0428", null),
                               ),
                             ],
@@ -197,16 +227,26 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                           backgroundColor: primaryCyan,
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
                         ),
                         child: _isSaving
                             ? const SizedBox(
-                                width: 22, height: 22,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
                               )
                             : const Text(
                                 "Guardar Farmacia",
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
                       ),
                     ),
@@ -220,10 +260,15 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
               Container(
                 constraints: const BoxConstraints(maxWidth: 500),
                 child: StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: supabase.from('farmacia').stream(primaryKey: ['id']).order('nombre', ascending: true),
+                  stream: supabase
+                      .from('farmacia')
+                      .stream(primaryKey: ['id'])
+                      .order('nombre', ascending: true),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: primaryCyan));
+                      return const Center(
+                        child: CircularProgressIndicator(color: primaryCyan),
+                      );
                     }
                     final farmacias = snapshot.data ?? [];
                     if (farmacias.isEmpty) {
@@ -246,7 +291,11 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                       children: [
                         const Text(
                           "Farmacias registradas",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                          ),
                         ),
                         const SizedBox(height: 15),
                         ...farmacias.map((f) {
@@ -256,7 +305,12 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(15),
-                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.02),
+                                  blurRadius: 10,
+                                ),
+                              ],
                             ),
                             child: Row(
                               children: [
@@ -266,33 +320,55 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                                     color: primaryCyan.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Icon(Icons.local_pharmacy_rounded, color: primaryCyan, size: 22),
+                                  child: const Icon(
+                                    Icons.local_pharmacy_rounded,
+                                    color: primaryCyan,
+                                    size: 22,
+                                  ),
                                 ),
                                 const SizedBox(width: 15),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         f['nombre'] ?? 'Sin nombre',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF006064)),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: Color(0xFF006064),
+                                        ),
                                       ),
-                                      if (f['direccion'] != null && f['direccion'].toString().isNotEmpty)
+                                      if (f['direccion'] != null &&
+                                          f['direccion'].toString().isNotEmpty)
                                         Text(
                                           f['direccion'],
-                                          style: const TextStyle(color: Colors.grey, fontSize: 13),
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 13,
+                                          ),
                                         ),
-                                      if (f['latitud'] != null && f['longitud'] != null)
+                                      if (f['latitud'] != null &&
+                                          f['longitud'] != null)
                                         Text(
                                           "📍 ${f['latitud']}, ${f['longitud']}",
-                                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                     ],
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-                                  onPressed: () => _eliminarFarmacia(f['id'].toString()),
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.redAccent,
+                                    size: 20,
+                                  ),
+                                  onPressed: () =>
+                                      _eliminarFarmacia(f['id'].toString()),
                                 ),
                               ],
                             ),
@@ -315,7 +391,11 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
       padding: const EdgeInsets.only(bottom: 8, left: 2),
       child: Text(
         text,
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF006064), fontSize: 14),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF006064),
+          fontSize: 14,
+        ),
       ),
     );
   }
@@ -324,13 +404,24 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-      prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: const Color(0xFF00ACC1), size: 20) : null,
+      prefixIcon: prefixIcon != null
+          ? Icon(prefixIcon, color: const Color(0xFF00ACC1), size: 20)
+          : null,
       filled: true,
       fillColor: const Color(0xFFF0F9FF),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      border:        OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFBAE6FD))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFBAE6FD))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFF00ACC1), width: 1.5)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFFBAE6FD)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFFBAE6FD)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFF00ACC1), width: 1.5),
+      ),
     );
   }
 }

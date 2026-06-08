@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'shared_theme.dart';
 
 class NotaVozForm extends StatefulWidget {
+  const NotaVozForm({super.key});
+
   @override
   _NotaVozFormState createState() => _NotaVozFormState();
 }
@@ -32,7 +34,10 @@ class _NotaVozFormState extends State<NotaVozForm> {
                 decoration: BoxDecoration(
                   color: _grabando ? Colors.red[100] : AppColors.sky50,
                   shape: BoxShape.circle,
-                  border: Border.all(color: _grabando ? Colors.red : AppColors.cyan500, width: 2),
+                  border: Border.all(
+                    color: _grabando ? Colors.red : AppColors.cyan500,
+                    width: 2,
+                  ),
                 ),
                 child: Icon(
                   _grabando ? Icons.stop : Icons.mic,
@@ -44,7 +49,10 @@ class _NotaVozFormState extends State<NotaVozForm> {
             SizedBox(height: 20),
             Text(
               _grabando ? 'Grabando...' : 'Pulsa para grabar nota',
-              style: TextStyle(color: AppColors.cyan900, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: AppColors.cyan900,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),

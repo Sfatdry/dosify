@@ -16,7 +16,8 @@ class DosifyTheme {
         secondary: turquesa,
         surface: fondoGris,
       ),
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(), // Fuente moderna similar a tu diseño
+      textTheme:
+          GoogleFonts.plusJakartaSansTextTheme(), // Fuente moderna similar a tu diseño
       scaffoldBackgroundColor: fondoGris,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
