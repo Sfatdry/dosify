@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audioplayers/audioplayers.dart';
+import '../services/notification_service.dart';
 
 class RecordatorioScreen extends StatefulWidget {
   final String userName;
@@ -83,7 +84,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
         final meds = await supabase
             .from('medicamento')
             .select(
-              'id, nombre, tratamiento_id, tratamiento(tipo_alerta, repeticiones)',
+              'id, nombre, frecuencia_horas, duracion_dias, tratamiento_id, tratamiento(tipo_alerta, repeticiones)',
             )
             .inFilter('tratamiento_id', treatmentIds)
             .order('nombre', ascending: true);
@@ -223,6 +224,60 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
             .eq('id', tratamientoId);
       }
 
+      // 3. Generar historial de dosis automático
+      final selectedMed = _userMedicamentos.firstWhere(
+        (m) => m['id'].toString() == _medicamentoId,
+        orElse: () => {},
+      );
+      final int freqHoras = selectedMed['frecuencia_horas'] ?? 8;
+      final int duracionDias = selectedMed['duracion_dias'] ?? 7;
+
+      await supabase
+          .from('dosis')
+          .delete()
+          .eq('medicamento_id', _medicamentoId!); // clean previous pending for this med
+
+      int totalDosis = (24 / (freqHoras > 0 ? freqHoras : 8)).floor() * duracionDias;
+      if (totalDosis <= 0) totalDosis = 1;
+
+      List<Map<String, dynamic>> historialToInsert = [];
+      DateTime currentDoseTime = DateTime(
+        ahora.year,
+        ahora.month,
+        ahora.day,
+        _horaSeleccionada.hour,
+        _horaSeleccionada.minute,
+      );
+
+      for (int i = 0; i < totalDosis; i++) {
+        historialToInsert.add({
+          'medicamento_id': _medicamentoId,
+          // 'usuario_id': widget.userId, // no estoy seguro si dosis tiene usuario_id, mejor no lo incluyo por ahora, o sí?
+          'fecha_hora': currentDoseTime.toIso8601String(),
+          'estado': 'pendiente',
+        });
+        
+        // Programar notificación local
+        if (currentDoseTime.isAfter(ahora)) {
+          final title = "Hora de tu medicación 💊";
+          final body = "Es hora de tomar tu ${selectedMed['nombre'] ?? 'medicamento'}.";
+          // Usar un id único basado en la fecha para la notificación
+          final id = currentDoseTime.millisecondsSinceEpoch ~/ 100000;
+          await NotificationService().scheduleNotification(
+            id: id,
+            title: title,
+            body: body,
+            scheduledDate: currentDoseTime,
+          );
+        }
+        
+        currentDoseTime = currentDoseTime.add(Duration(hours: freqHoras));
+      }
+
+      if (historialToInsert.isNotEmpty) {
+        await supabase.from('dosis').insert(historialToInsert);
+      }
+
       await _cargarDatosIniciales();
     await _playNotificationSound();
 
@@ -255,8 +310,13 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
 
   // Play a notification sound using audioplayers
   Future<void> _playNotificationSound() async {
-    final player = AudioPlayer();
-    await player.play(AssetSource('assets/sounds/notification.wav'));
+    try {
+      final player = AudioPlayer();
+      // AssetSource automatically prefixes with 'assets/'
+      await player.play(AssetSource('sounds/notification.wav'));
+    } catch (e) {
+      print("Error reproduciendo sonido: $e");
+    }
   }
 
   @override

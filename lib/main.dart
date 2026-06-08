@@ -4,6 +4,7 @@ import 'screens/login_screen.dart';
 import 'screens/main_navigation.dart';
 import 'screens/splash_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,7 @@ void main() async {
   );
 
   await initializeDateFormatting('es', null);
+  await NotificationService().init();
 
   runApp(const MyApp());
 }

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:record/record.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class NotaDeVozScreen extends StatefulWidget {
   final String userName;
@@ -28,6 +32,11 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
   List<Map<String, dynamic>> _tratamientos = [];
   String? _tratamientoSeleccionadoId;
 
+  // Grabación y transcripción
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  String? _audioPath;
+
   @override
   void initState() {
     super.initState();
@@ -46,22 +55,55 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
     }
   }
 
-  void _toggleGrabacion() {
-    setState(() {
-      if (_isRecording) {
-        // Detener grabación
+  Future<void> _toggleGrabacion() async {
+    if (_isRecording) {
+      // Detener grabación
+      final path = await _audioRecorder.stop();
+      _speech.stop();
+      
+      setState(() {
         _isRecording = false;
         _hasRecording = true;
+        _audioPath = path;
+        
         if (_notaController.text.isEmpty) {
-          _notaController.text =
-              "Nota de voz grabada el ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
+          _notaController.text = "Nota de voz guardada el ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
         }
+      });
+    } else {
+      // Iniciar grabación
+      bool hasPermission = await _audioRecorder.hasPermission();
+      bool available = await _speech.initialize(
+        onStatus: (status) => debugPrint('STT Status: $status'),
+        onError: (error) => debugPrint('STT Error: $error'),
+      );
+      
+      if (hasPermission) {
+        final dir = await getApplicationDocumentsDirectory();
+        final filePath = '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        
+        await _audioRecorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: filePath);
+        
+        if (available) {
+          _speech.listen(
+            onResult: (result) {
+              setState(() {
+                _notaController.text = result.recognizedWords;
+              });
+            },
+            localeId: 'es_ES', // o es_MX
+          );
+        }
+        
+        setState(() {
+          _isRecording = true;
+          _hasRecording = false;
+          _notaController.clear();
+        });
       } else {
-        // Iniciar grabación
-        _isRecording = true;
-        _hasRecording = false;
+        _snack("Permiso de micrófono denegado", Colors.red);
       }
-    });
+    }
   }
 
   Future<void> _guardarNota() async {
@@ -76,11 +118,21 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
 
     setState(() => _isSaving = true);
     try {
+      String audioUrl = "nota_${DateTime.now().millisecondsSinceEpoch}";
+      
+      // Subir el audio a Supabase Storage
+      if (_audioPath != null) {
+        final file = File(_audioPath!);
+        final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        final String pathInStorage = '${widget.userId}/$fileName';
+        
+        await supabase.storage.from('audios').upload(pathInStorage, file);
+        audioUrl = supabase.storage.from('audios').getPublicUrl(pathInStorage);
+      }
+
       await supabase.from('notavoz').insert({
         'tratamiento_id': _tratamientoSeleccionadoId,
-        'url_audio': _notaController.text.trim().isNotEmpty
-            ? _notaController.text.trim()
-            : "nota_${DateTime.now().millisecondsSinceEpoch}",
+        'url_audio': '$audioUrl|${_notaController.text.trim()}',
         'fecha': DateTime.now().toIso8601String(),
       });
 

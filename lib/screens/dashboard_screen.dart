@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:percent_indicator/percent_indicator.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String userName;
@@ -17,6 +19,13 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   // Formateadores útiles para limpiar fechas y horas de Supabase
   String _formatearHora(String timestampStr) {
@@ -376,6 +385,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 medNombreMap[medId] ??
                                                 'Medicamento';
                                             return _buildDosisRow(
+                                              dosis['id']?.toString() ?? '',
+                                              medId,
                                               nombreMed,
                                               'Pendiente',
                                               _formatearHora(
@@ -495,6 +506,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 medNombreMap[medId] ??
                                                 'Medicamento';
                                             return _buildDosisRow(
+                                              dosis['id']?.toString() ?? '',
+                                              medId,
                                               nombreMed,
                                               'Tomada',
                                               _formatearHora(
@@ -514,7 +527,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 35),
 
-                        // 3. SECCIÓN INFERIOR: TRATAMIENTOS ACTIVOS
+                        // 3. ADHERENCIA DEL DÍA
+                        StreamBuilder<List<Map<String, dynamic>>>(
+                          stream: supabase
+                              .from('dosis')
+                              .stream(primaryKey: ['id']),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) return const SizedBox.shrink();
+                            
+                            final allDosis = snapshot.data ?? [];
+                            final dosisUser = allDosis
+                                .where((d) => medicamentoIds.contains(d['medicamento_id'].toString()))
+                                .toList();
+                            
+                            final inicioHoy = DateTime.parse(_obtenerFechaHoyInicio());
+                            final finHoy = DateTime.parse(_obtenerFechaHoyFin());
+                            
+                            final dosisHoy = dosisUser.where((d) {
+                              if (d['fecha_hora'] == null) return false;
+                              final fecha = DateTime.parse(d['fecha_hora']).toLocal();
+                              return fecha.isAfter(inicioHoy) && fecha.isBefore(finHoy);
+                            }).toList();
+                            
+                            if (dosisHoy.isEmpty) return const SizedBox.shrink();
+
+                            final tomadas = dosisHoy.where((d) => d['estado'].toString().toLowerCase() == 'tomada').length;
+                            final total = dosisHoy.length;
+                            final double porcentaje = total > 0 ? (tomadas / total) : 0.0;
+                            
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 35),
+                              padding: const EdgeInsets.all(25),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  CircularPercentIndicator(
+                                    radius: 50.0,
+                                    lineWidth: 10.0,
+                                    animation: true,
+                                    percent: porcentaje,
+                                    center: Text(
+                                      "${(porcentaje * 100).toInt()}%",
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+                                    ),
+                                    circularStrokeCap: CircularStrokeCap.round,
+                                    progressColor: porcentaje == 1.0 ? Colors.green : const Color(0xFF00ACC1),
+                                    backgroundColor: Colors.grey.shade200,
+                                  ),
+                                  const SizedBox(width: 25),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Adherencia de Hoy",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF006064),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          porcentaje == 1.0
+                                              ? "¡Excelente trabajo! Has tomado todas tus dosis de hoy."
+                                              : "Has tomado $tomadas de $total dosis programadas para hoy.",
+                                          style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+
+                        // 4. SECCIÓN INFERIOR: TRATAMIENTOS ACTIVOS
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(25),
@@ -656,8 +748,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       itemCount: recentNotas.length,
                                       itemBuilder: (context, index) {
                                         final nota = recentNotas[index];
-                                        final String desc = nota['url_audio'] ??
-                                            'Sin descripción';
+                                        final String rawAudio = nota['url_audio'] ?? 'Sin descripción';
+                                        
+                                        String audioUrl = '';
+                                        String desc = rawAudio;
+                                        if (rawAudio.contains('|')) {
+                                          final parts = rawAudio.split('|');
+                                          audioUrl = parts[0];
+                                          desc = parts.sublist(1).join('|');
+                                        }
+
                                         final String tratId =
                                             nota['tratamiento_id']
                                                     ?.toString() ??
@@ -695,18 +795,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           ),
                                           child: Row(
                                             children: [
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.all(10),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.orange
-                                                      .withOpacity(0.1),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: const Icon(
-                                                  Icons.mic_rounded,
-                                                  color: Colors.orange,
-                                                  size: 20,
+                                              GestureDetector(
+                                                onTap: () {
+                                                  if (audioUrl.startsWith('http')) {
+                                                    _audioPlayer.play(UrlSource(audioUrl));
+                                                  } else {
+                                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No hay audio grabado para reproducir.')));
+                                                  }
+                                                },
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.orange
+                                                        .withOpacity(0.1),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.play_arrow_rounded,
+                                                    color: Colors.orange,
+                                                    size: 24,
+                                                  ),
                                                 ),
                                               ),
                                               const SizedBox(width: 15),
@@ -802,7 +911,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Future<void> _marcarDosisTomada(String id, String medId) async {
+    try {
+      await supabase.from('dosis').update({'estado': 'tomada'}).eq('id', id);
+      
+      // Descuento automático de inventario
+      if (medId.isNotEmpty) {
+        final List<dynamic> invs = await supabase
+            .from('inventario')
+            .select()
+            .eq('medicamento_id', medId)
+            .limit(1);
+        if (invs.isNotEmpty) {
+          int cant = invs[0]['cantidad_actual'] as int;
+          int alertaMinima = invs[0]['alerta_minima'] as int;
+          if (cant > 0) {
+            cant -= 1;
+            await supabase
+                .from('inventario')
+                .update({'cantidad_actual': cant})
+                .eq('id', invs[0]['id']);
+            
+            if (mounted && cant <= alertaMinima) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("⚠️ ¡Atención! Te quedan $cant pastillas."),
+                  backgroundColor: Colors.redAccent,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
+            }
+          }
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Dosis marcada como tomada 👏"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error al actualizar dosis: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildDosisRow(
+    String dosisId,
+    String medId,
     String nombreMed,
     String estado,
     String hora,
@@ -819,28 +984,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Expanded(
+            child: Row(
+              children: [
+                Icon(Icons.medication, color: color, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nombreMed,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF006064),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(estado, style: TextStyle(color: color, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           Row(
             children: [
-              Icon(Icons.medication, color: color, size: 20),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    nombreMed,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF006064),
-                    ),
-                  ),
-                  Text(estado, style: TextStyle(color: color, fontSize: 12)),
-                ],
+              Text(
+                hora,
+                style: TextStyle(fontWeight: FontWeight.bold, color: color),
               ),
+              if (estado.toLowerCase() == 'pendiente') ...[
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => _marcarDosisTomada(dosisId, medId),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check_circle, color: Colors.green, size: 22),
+                  ),
+                ),
+              ],
             ],
-          ),
-          Text(
-            hora,
-            style: TextStyle(fontWeight: FontWeight.bold, color: color),
           ),
         ],
       ),

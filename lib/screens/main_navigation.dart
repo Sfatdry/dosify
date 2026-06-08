@@ -16,6 +16,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class MainNavigation extends StatefulWidget {
   final String userName;
@@ -47,6 +48,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   void initState() {
     super.initState();
+    _requestPermissions();
     _startReminderTimer();
 
     _screens = [
@@ -98,6 +100,17 @@ class _MainNavigationState extends State<MainNavigation> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+  }
+
+  Future<void> _requestPermissions() async {
+    try {
+      final status = await Permission.microphone.status;
+      if (!status.isGranted) {
+        await Permission.microphone.request();
+      }
+    } catch (e) {
+      debugPrint("Error requesting microphone permission: $e");
+    }
   }
 
   @override
