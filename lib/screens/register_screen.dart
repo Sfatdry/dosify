@@ -147,96 +147,101 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: Text(
-                "RECORDATORIOS DE MEDICACIÓN",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            const Text(
-              "Crear Cuenta",
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: textCyan),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              "Únase a la red de cuidado Dosify",
-              style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 40),
-
-            // --- FILA DE SELECCIÓN DE GÉNERO ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 550),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildGenderCircle("Mujer",     Icons.face_retouching_natural_rounded, primaryCyan),
-                const SizedBox(width: 35),
-                _buildGenderCircle("Hombre",    Icons.face_rounded,                    primaryCyan),
-                const SizedBox(width: 35),
-                _buildGenderCircle("No Binario", Icons.child_care_rounded,             primaryCyan),
+                const Center(
+                  child: Text(
+                    "RECORDATORIOS DE MEDICACIÓN",
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                const Text(
+                  "Crear Cuenta",
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: textCyan),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  "Únase a la red de cuidado Dosify",
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 40),
+
+                // --- FILA DE SELECCIÓN DE GÉNERO ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildGenderCircle("Mujer",     Icons.face_retouching_natural_rounded, primaryCyan),
+                    const SizedBox(width: 35),
+                    _buildGenderCircle("Hombre",    Icons.face_rounded,                    primaryCyan),
+                    const SizedBox(width: 35),
+                    _buildGenderCircle("No Binario", Icons.child_care_rounded,             primaryCyan),
+                  ],
+                ),
+                const SizedBox(height: 40),
+
+                _buildTextField(
+                  controller: _nameController,
+                  hintText: "Nombre Completo",
+                  icon: Icons.person_outline_rounded,
+                  primaryColor: primaryCyan,
+                ),
+                const SizedBox(height: 20),
+
+                _buildTextField(
+                  controller: _emailController,
+                  hintText: "Correo Electrónico",
+                  icon: Icons.mail_outline_rounded,
+                  primaryColor: primaryCyan,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 20),
+
+                _buildTextField(
+                  controller: _passwordController,
+                  hintText: "Contraseña",
+                  icon: Icons.lock_outline_rounded,
+                  primaryColor: primaryCyan,
+                  obscureText: _obscurePassword,
+                  suffix: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+                const SizedBox(height: 45),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _registrarUsuario,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryCyan,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      elevation: 0,
+                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "Finalizar Registro",
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 20),
               ],
             ),
-            const SizedBox(height: 40),
-
-            _buildTextField(
-              controller: _nameController,
-              hintText: "Nombre Completo",
-              icon: Icons.person_outline_rounded,
-              primaryColor: primaryCyan,
-            ),
-            const SizedBox(height: 20),
-
-            _buildTextField(
-              controller: _emailController,
-              hintText: "Correo Electrónico",
-              icon: Icons.mail_outline_rounded,
-              primaryColor: primaryCyan,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 20),
-
-            _buildTextField(
-              controller: _passwordController,
-              hintText: "Contraseña",
-              icon: Icons.lock_outline_rounded,
-              primaryColor: primaryCyan,
-              obscureText: _obscurePassword,
-              suffix: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: Colors.grey,
-                ),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-              ),
-            ),
-            const SizedBox(height: 45),
-
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _registrarUsuario,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryCyan,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        "Finalizar Registro",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
+          ),
         ),
       ),
     );

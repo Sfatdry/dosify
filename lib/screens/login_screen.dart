@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register_screen.dart';
+import 'main_navigation.dart';
 import '../widgets/neumorphic_input.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -11,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController    = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
@@ -23,48 +24,83 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    if (_isLoading) return;
+
     final email    = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Por favor, ingresa tu correo y contraseña"),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      _snack("Por favor, ingresa correo y contraseña", Colors.redAccent);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      // ── PASO 1: Intentar con Supabase Auth (usuarios nuevos) ──
+      final response = await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: password,
       );
-      // El StreamBuilder en main.dart detecta la sesión y navega automáticamente
+      
+      if (response.session != null || response.user != null) {
+        final nombre = response.user?.userMetadata?['full_name'] ?? 
+                       response.user?.email?.split('@')[0] ?? 
+                       'Usuario';
+        final uId = response.user!.id;
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MainNavigation(userName: nombre, userId: uId),
+            ),
+          );
+        }
+        return;
+      }
     } on AuthException catch (e) {
+      debugPrint("Auth sign in error: ${e.message}");
+    } catch (e) {
+      debugPrint("General auth sign in error: $e");
+    }
+
+    try {
+      // ── PASO 2: Buscar en tabla 'usuario' (usuarios legacy o casos especiales) ──
+      final result = await Supabase.instance.client
+          .from('usuario')
+          .select()
+          .eq('email', email)
+          .eq('password', password)
+          .maybeSingle();
+
+      if (result == null) {
+        if (mounted) _snack("Correo o contraseña incorrectos", Colors.redAccent);
+        return;
+      }
+
+      final nombre = result['nombre'] ?? email.split('@')[0];
+      final uId = result['id'].toString();
+
+      // ── PASO 3: Navegación manual si Auth no generó sesión pero existe en la DB ──
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: Colors.redAccent,
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MainNavigation(userName: nombre, userId: uId),
           ),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error inesperado: $e"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) _snack("Error: $e", Colors.red);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _snack(String msg, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: color),
+    );
   }
 
   @override
@@ -86,6 +122,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   'assets/dosify_logo_hd.PNG',
                   width: 150,
                   height: 150,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 150,
+                      height: 150,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 40),
@@ -105,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Input Correo
+              // Input Email
               NeumorphicInput(
                 hintText: "Correo electrónico",
                 icon: Icons.email_outlined,
@@ -120,7 +164,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 isPassword: true,
                 controller: _passwordController,
               ),
-
               const SizedBox(height: 40),
 
               // Botón Iniciar Sesión
@@ -128,21 +171,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleLogin,
+                  onPressed: _isLoading ? null : () => _handleLogin(), // 👈 REPARADO: Forzado de callback dinámico para Flutter Web
                   style: ElevatedButton.styleFrom(
                     backgroundColor: tealColor,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                     elevation: 5,
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
                       : const Text(
                           "Iniciar Sesión",
                           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                 ),
               ),
-
               const SizedBox(height: 30),
 
               // Enlace a Registro

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String userId;
+  const ProfileScreen({super.key, required this.userId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -31,11 +32,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _cargarDatosDelUsuario() async {
     try {
       // Hacemos un SELECT a la tabla 'usuario'. 
-      // Ordenamos por 'fecha_registro' de forma descendente para traer al usuario más reciente.
       final List<dynamic> response = await supabase
           .from('usuario')
           .select()
-          .order('fecha_registro', ascending: false)
+          .eq('id', widget.userId)
           .limit(1);
 
       if (response.isNotEmpty) {
@@ -131,95 +131,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: primaryCyan))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Encabezado idéntico a tu interfaz actual
-                  Row(
+          : Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 550),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: primaryCyan,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.person, color: Colors.white, size: 35),
-                      ),
-                      const SizedBox(width: 20),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // Encabezado idéntico a tu interfaz actual
+                      Row(
                         children: [
-                          const Text(
-                            "Perfil de Usuario",
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textCyan),
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: const BoxDecoration(
+                              color: primaryCyan,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.person, color: Colors.white, size: 35),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Administra tu información personal",
-                            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                          const SizedBox(width: 20),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Perfil de Usuario",
+                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textCyan),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Administra tu información personal",
+                                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                              ),
+                            ],
                           ),
                         ],
                       ),
+                      const SizedBox(height: 40),
+
+                      // Label: Nombre completo
+                      const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
+                      const SizedBox(height: 10),
+                      _buildTextField(
+                        controller: _nameController,
+                        icon: Icons.person_outline_rounded,
+                        primaryColor: primaryCyan,
+                      ),
+                      const SizedBox(height: 25),
+
+                      // Label: Correo electrónico
+                      const Text("Correo electrónico", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
+                      const SizedBox(height: 10),
+                      _buildTextField(
+                        controller: _emailController,
+                        icon: Icons.mail_outline_rounded,
+                        primaryColor: primaryCyan,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 25),
+
+                      // Label: Contraseña
+                      const Text("Contraseña", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
+                      const SizedBox(height: 10),
+                      _buildTextField(
+                        controller: _passwordController,
+                        icon: Icons.lock_outline_rounded,
+                        primaryColor: primaryCyan,
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 45),
+
+                      // --- BOTÓN PRINCIPAL DE GUARDAR CAMBIOS ---
+                      SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton(
+                          onPressed: _isSaving ? null : _actualizarPerfil,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryCyan,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            elevation: 0,
+                          ),
+                          child: _isSaving
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
+                                  "Guardar Cambios",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                  const SizedBox(height: 40),
-
-                  // Label: Nombre completo
-                  const Text("Nombre completo", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  _buildTextField(
-                    controller: _nameController,
-                    icon: Icons.person_outline_rounded,
-                    primaryColor: primaryCyan,
-                  ),
-                  const SizedBox(height: 25),
-
-                  // Label: Correo electrónico
-                  const Text("Correo electrónico", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  _buildTextField(
-                    controller: _emailController,
-                    icon: Icons.mail_outline_rounded,
-                    primaryColor: primaryCyan,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 25),
-
-                  // Label: Contraseña
-                  const Text("Contraseña", style: TextStyle(fontWeight: FontWeight.bold, color: textCyan, fontSize: 15)),
-                  const SizedBox(height: 10),
-                  _buildTextField(
-                    controller: _passwordController,
-                    icon: Icons.lock_outline_rounded,
-                    primaryColor: primaryCyan,
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 45),
-
-                  // --- BOTÓN PRINCIPAL DE GUARDAR CAMBIOS ---
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _actualizarPerfil,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryCyan,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                        elevation: 0,
-                      ),
-                      child: _isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              "Guardar Cambios",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
             ),
     );

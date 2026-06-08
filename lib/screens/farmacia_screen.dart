@@ -3,8 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FarmaciaScreen extends StatefulWidget {
   final String userName;
+  final String userId;
 
-  const FarmaciaScreen({super.key, required this.userName});
+  const FarmaciaScreen({super.key, required this.userName, required this.userId});
 
   @override
   State<FarmaciaScreen> createState() => _FarmaciaScreenState();

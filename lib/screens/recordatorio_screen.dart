@@ -4,8 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RecordatorioScreen extends StatefulWidget {
   final String userName;
+  final String userId;
 
-  const RecordatorioScreen({super.key, required this.userName});
+  const RecordatorioScreen({super.key, required this.userName, required this.userId});
 
   @override
   State<RecordatorioScreen> createState() => _RecordatorioScreenState();
@@ -17,6 +18,7 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
   bool _isLoading = true;
   String? _recordatorioId; 
   String? _medicamentoId; // Necesario para asociar el recordatorio
+  List<Map<String, dynamic>> _userMedicamentos = [];
 
   bool isCritica = false;
   bool isRecordatorioActivo = true; 
@@ -60,51 +62,73 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
     }
   }
 
-  // Obtenemos un medicamento disponible para poder asociar el recordatorio
   Future<void> _cargarDatosIniciales() async {
     try {
       setState(() => _isLoading = true);
 
-      // 1. Buscamos el primer medicamento disponible para pruebas
-      final List<dynamic> medicamentos = await supabase
-          .from('medicamento')
-          .select('id, tratamiento_id, tratamiento(tipo_alerta, repeticiones)')
-          .limit(1);
+      // 1. Obtener tratamientos del usuario
+      final treatments = await supabase
+          .from('tratamiento')
+          .select('id')
+          .eq('usuario_id', widget.userId);
+      final treatmentIds = treatments.map((t) => t['id'].toString()).toList();
 
-      if (medicamentos.isNotEmpty) {
-        _medicamentoId = medicamentos.first['id'];
+      if (treatmentIds.isNotEmpty) {
+        // 2. Obtener medicamentos de esos tratamientos
+        final meds = await supabase
+            .from('medicamento')
+            .select('id, nombre, tratamiento_id, tratamiento(tipo_alerta, repeticiones)')
+            .inFilter('tratamiento_id', treatmentIds)
+            .order('nombre', ascending: true);
         
-        // Cargamos los datos del tratamiento asociado para la UI corporativa
-        final tratamientoData = medicamentos.first['tratamiento'];
-        if (tratamientoData != null) {
-          _repeticionesController.text = (tratamientoData['repeticiones'] ?? 1).toString();
-          final String tipoAlerta = (tratamientoData['tipo_alerta'] ?? 'NORMAL').toString().toUpperCase();
-          isCritica = tipoAlerta == 'CRÍTICA' || tipoAlerta == 'CRITICA';
-        }
+        _userMedicamentos = List<Map<String, dynamic>>.from(meds);
 
-        // 2. Buscamos si este medicamento ya tiene un registro en la tabla 'recordatorio'
-        final List<dynamic> recordatorios = await supabase
-            .from('recordatorio')
-            .select('id, fecha_hora, activo')
-            .eq('medicamento_id', _medicamentoId!)
-            .limit(1);
-
-        if (recordatorios.isNotEmpty) {
-          final rec = recordatorios.first;
-          _recordatorioId = rec['id'];
-          isRecordatorioActivo = rec['activo'] ?? true;
-
-          if (rec['fecha_hora'] != null) {
-            final DateTime dt = DateTime.parse(rec['fecha_hora']);
-            _horaSeleccionada = TimeOfDay(hour: dt.hour, minute: dt.minute);
+        if (_userMedicamentos.isNotEmpty) {
+          final listIds = _userMedicamentos.map((m) => m['id'].toString()).toList();
+          if (_medicamentoId == null || !listIds.contains(_medicamentoId)) {
+            _medicamentoId = listIds.first;
           }
+
+          final selectedMed = _userMedicamentos.firstWhere((m) => m['id'].toString() == _medicamentoId);
+          final tratamientoData = selectedMed['tratamiento'];
+          if (tratamientoData != null) {
+            _repeticionesController.text = (tratamientoData['repeticiones'] ?? 1).toString();
+            final String tipoAlerta = (tratamientoData['tipo_alerta'] ?? 'NORMAL').toString().toUpperCase();
+            isCritica = tipoAlerta == 'CRÍTICA' || tipoAlerta == 'CRITICA';
+          }
+
+          // 3. Buscar si este medicamento ya tiene un recordatorio
+          final recordatorios = await supabase
+              .from('recordatorio')
+              .select('id, fecha_hora, activo')
+              .eq('medicamento_id', _medicamentoId!)
+              .limit(1);
+
+          if (recordatorios.isNotEmpty) {
+            final rec = recordatorios.first;
+            _recordatorioId = rec['id'];
+            isRecordatorioActivo = rec['activo'] ?? true;
+
+            if (rec['fecha_hora'] != null) {
+              final DateTime dt = DateTime.parse(rec['fecha_hora']);
+              _horaSeleccionada = TimeOfDay(hour: dt.hour, minute: dt.minute);
+            }
+          } else {
+            _recordatorioId = null;
+            isRecordatorioActivo = true;
+            _horaSeleccionada = const TimeOfDay(hour: 8, minute: 0);
+          }
+        } else {
+          _medicamentoId = null;
+          _recordatorioId = null;
         }
       } else {
-        _repeticionesController.text = "1";
+        _userMedicamentos = [];
+        _medicamentoId = null;
+        _recordatorioId = null;
       }
     } catch (e) {
       print("Error al cargar datos: $e");
-      _repeticionesController.text = "1";
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -262,7 +286,44 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 35),
+                              const Text(
+                                "Seleccionar Medicamento",
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF475569)),
+                              ),
+                              const SizedBox(height: 10),
+                              _userMedicamentos.isEmpty
+                                  ? const Text(
+                                      "Crea un medicamento primero",
+                                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                                    )
+                                  : Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF8FAFC),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: Colors.grey.shade200),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          isExpanded: true,
+                                          value: _medicamentoId,
+                                          onChanged: (val) {
+                                            setState(() {
+                                              _medicamentoId = val;
+                                              _recordatorioId = null; // reset to check for new medicine
+                                            });
+                                            _cargarDatosIniciales();
+                                          },
+                                          items: _userMedicamentos.map((med) {
+                                            return DropdownMenuItem<String>(
+                                              value: med['id'].toString(),
+                                              child: Text(med['nombre'] ?? 'Sin nombre', style: const TextStyle(color: Color(0xFF1E293B))),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ),
+                                    ),
+                              const SizedBox(height: 25),
 
                               const Text(
                                 "Hora del Recordatorio",

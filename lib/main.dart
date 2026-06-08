@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation.dart';
+import 'screens/splash_screen.dart';
 import 'package:intl/date_symbol_data_local.dart'; 
 
 void main() async {
@@ -43,7 +44,8 @@ class MyApp extends StatelessWidget {
         '/home': (context) => MainNavigation(
           userName: Supabase.instance.client.auth.currentSession?.user.userMetadata?['full_name'] ??
                     Supabase.instance.client.auth.currentSession?.user.email?.split('@')[0] ?? 
-                    "Usuario"
+                    "Usuario",
+          userId: Supabase.instance.client.auth.currentSession?.user.id ?? "",
         ), 
       },
     );

@@ -35,7 +35,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       // User already logged in, go to main navigation.
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => MainNavigation(userName: session.user!.userMetadata?['full_name'] ?? session.user!.email?.split('@')[0] ?? 'Usuario'),
+          builder: (_) => MainNavigation(
+            userName: session.user!.userMetadata?['full_name'] ?? session.user!.email?.split('@')[0] ?? 'Usuario',
+            userId: session.user!.id,
+          ),
         ),
       );
     } else {

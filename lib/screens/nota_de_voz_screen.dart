@@ -3,8 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotaDeVozScreen extends StatefulWidget {
   final String userName;
+  final String userId;
 
-  const NotaDeVozScreen({super.key, required this.userName});
+  const NotaDeVozScreen({super.key, required this.userName, required this.userId});
 
   @override
   State<NotaDeVozScreen> createState() => _NotaDeVozScreenState();
@@ -30,9 +31,11 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
   }
 
   Future<void> _cargarTratamientos() async {
+    final String userId = widget.userId;
     final data = await supabase
         .from('tratamiento')
         .select('id, nombre')
+        .eq('usuario_id', userId)
         .order('nombre', ascending: true);
     if (mounted) {
       setState(() => _tratamientos = List<Map<String, dynamic>>.from(data));
@@ -116,320 +119,331 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
   @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
+    final String currentUserId = widget.userId;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
-        child: Center(
-          child: Column(
-            children: [
-              // ── FORMULARIO ────────────────────────────────────────
-              Container(
-                constraints: const BoxConstraints(maxWidth: 500),
-                padding: const EdgeInsets.all(35),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Encabezado
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: primaryCyan,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: const Icon(
-                            Icons.mic,
-                            color: Colors.white,
-                            size: 26,
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        const Text(
-                          "Nota de Voz",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF006064),
-                          ),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: supabase.from('tratamiento').stream(primaryKey: ['id']).eq('usuario_id', currentUserId),
+        builder: (context, tratSnapshot) {
+          final userTratamientos = tratSnapshot.data ?? [];
+          final userTratamientoIds = userTratamientos.map((t) => t['id'].toString()).toSet();
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
+            child: Center(
+              child: Column(
+                children: [
+                  // ── FORMULARIO ────────────────────────────────────────
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 500),
+                    padding: const EdgeInsets.all(35),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 20,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 30),
-
-                    // Selector de tratamiento
-                    const Text(
-                      "Tratamiento asociado",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF006064),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _tratamientos.isEmpty
-                        ? const Text(
-                            "Crea un tratamiento primero",
-                            style: TextStyle(color: Colors.grey, fontSize: 13),
-                          )
-                        : Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF0F9FF),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: const Color(0xFFBAE6FD),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Encabezado
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: primaryCyan,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: const Icon(
+                                Icons.mic,
+                                color: Colors.white,
+                                size: 26,
                               ),
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                hint: const Text(
-                                  "Selecciona un tratamiento",
-                                  style: TextStyle(
-                                    color: Color(0xFF94A3B8),
-                                    fontSize: 14,
+                            const SizedBox(width: 15),
+                            const Text(
+                              "Nota de Voz",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF006064),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+
+                        // Selector de tratamiento
+                        const Text(
+                          "Tratamiento asociado",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF006064),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _tratamientos.isEmpty
+                            ? const Text(
+                                "Crea un tratamiento primero",
+                                style: TextStyle(color: Colors.grey, fontSize: 13),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF0F9FF),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: const Color(0xFFBAE6FD),
                                   ),
                                 ),
-                                value: _tratamientoSeleccionadoId,
-                                onChanged: (val) => setState(
-                                  () => _tratamientoSeleccionadoId = val,
-                                ),
-                                items: _tratamientos.map((t) {
-                                  return DropdownMenuItem<String>(
-                                    value: t['id'].toString(),
-                                    child: Text(
-                                      t['nombre'] ?? 'Sin nombre',
-                                      style: const TextStyle(
-                                        color: Color(0xFF006064),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    isExpanded: true,
+                                    hint: const Text(
+                                      "Selecciona un tratamiento",
+                                      style: TextStyle(
+                                        color: Color(0xFF94A3B8),
+                                        fontSize: 14,
                                       ),
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ),
-                    const SizedBox(height: 30),
-
-                    // Panel de grabación
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0F9FF),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE0F2FE)),
-                      ),
-                      child: Column(
-                        children: [
-                          GestureDetector(
-                            onTap: _toggleGrabacion,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 250),
-                              width: 90,
-                              height: 90,
-                              decoration: BoxDecoration(
-                                color: _isRecording
-                                    ? Colors.redAccent
-                                    : primaryCyan,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        (_isRecording
-                                                ? Colors.redAccent
-                                                : primaryCyan)
-                                            .withValues(alpha: 0.3),
-                                    blurRadius: _isRecording ? 20 : 10,
-                                    spreadRadius: _isRecording ? 4 : 1,
+                                    value: _tratamientoSeleccionadoId,
+                                    onChanged: (val) => setState(
+                                      () => _tratamientoSeleccionadoId = val,
+                                    ),
+                                    items: _tratamientos.map((t) {
+                                      return DropdownMenuItem<String>(
+                                        value: t['id'].toString(),
+                                        child: Text(
+                                          t['nombre'] ?? 'Sin nombre',
+                                          style: const TextStyle(
+                                            color: Color(0xFF006064),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
                                   ),
-                                ],
+                                ),
                               ),
-                              child: Icon(
+                        const SizedBox(height: 30),
+
+                        // Panel de grabación
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0F9FF),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFE0F2FE)),
+                          ),
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: _toggleGrabacion,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 250),
+                                  width: 90,
+                                  height: 90,
+                                  decoration: BoxDecoration(
+                                    color: _isRecording
+                                        ? Colors.redAccent
+                                        : primaryCyan,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color:
+                                            (_isRecording
+                                                    ? Colors.redAccent
+                                                    : primaryCyan)
+                                                .withValues(alpha: 0.3),
+                                        blurRadius: _isRecording ? 20 : 10,
+                                        spreadRadius: _isRecording ? 4 : 1,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    _isRecording
+                                        ? Icons.stop
+                                        : (_hasRecording
+                                              ? Icons.check_circle
+                                              : Icons.mic),
+                                    color: Colors.white,
+                                    size: 42,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
                                 _isRecording
-                                    ? Icons.stop
-                                    : (_hasRecording
-                                          ? Icons.check_circle
-                                          : Icons.mic),
-                                color: Colors.white,
-                                size: 42,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            _isRecording
-                                ? "Grabando... Presiona para detener"
-                                : _hasRecording
-                                ? "✅ Grabación lista"
-                                : "Presiona para grabar",
-                            style: TextStyle(
-                              color: _isRecording
-                                  ? Colors.redAccent
-                                  : _hasRecording
-                                  ? Colors.green
-                                  : const Color(0xFF006064),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 25),
-
-                    // Campo de anotación / transcripción
-                    const Text(
-                      "Descripción / Transcripción",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF006064),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _notaController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText:
-                            "Escribe aquí la transcripción o una nota adicional...",
-                        hintStyle: const TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 13,
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFFF0F9FF),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFBAE6FD),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFBAE6FD),
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF00ACC1),
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 35),
-
-                    // Botón guardar
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : _guardarNota,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryCyan,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : const Text(
-                                "Guardar Nota",
+                                    ? "Grabando... Presiona para detener"
+                                    : _hasRecording
+                                    ? "✅ Grabación lista"
+                                    : "Presiona para grabar",
                                 style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  color: _isRecording
+                                      ? Colors.redAccent
+                                      : _hasRecording
+                                      ? Colors.green
+                                      : const Color(0xFF006064),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
                                 ),
                               ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 35),
-
-              // ── LISTA EN TIEMPO REAL ────────────────────────────
-              Container(
-                constraints: const BoxConstraints(maxWidth: 500),
-                child: StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: supabase
-                      .from('notavoz')
-                      .stream(primaryKey: ['id'])
-                      .order('fecha', ascending: false),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: primaryCyan),
-                      );
-                    }
-                    final notas = snapshot.data ?? [];
-                    if (notas.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(25),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            "No hay notas registradas aún.",
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                            ],
                           ),
                         ),
-                      );
-                    }
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                        const SizedBox(height: 25),
+
+                        // Campo de anotación / transcripción
                         const Text(
-                          "Notas registradas",
+                          "Descripción / Transcripción",
                           style: TextStyle(
-                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF006064),
+                            fontSize: 14,
                           ),
                         ),
-                        const SizedBox(height: 15),
-                        ...notas.map((n) => _notaCard(n, primaryCyan)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _notaController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText:
+                                "Escribe aquí la transcripción o una nota adicional...",
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 13,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF0F9FF),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFBAE6FD),
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFBAE6FD),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF00ACC1),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 35),
+
+                        // Botón guardar
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _guardarNota,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryCyan,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text(
+                                    "Guardar Nota",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                          ),
+                        ),
                       ],
-                    );
-                  },
-                ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 35),
+
+                  // ── LISTA EN TIEMPO REAL ────────────────────────────
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 500),
+                    child: StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: supabase
+                          .from('notavoz')
+                          .stream(primaryKey: ['id'])
+                          .order('fecha', ascending: false),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(color: primaryCyan),
+                          );
+                        }
+                        final allNotas = snapshot.data ?? [];
+                        final notas = allNotas.where((n) => userTratamientoIds.contains(n['tratamiento_id'].toString())).toList();
+
+                        if (notas.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.all(25),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "No hay notas registradas aún.",
+                                style: TextStyle(color: Colors.grey, fontSize: 14),
+                              ),
+                            ),
+                          );
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Notas registradas",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF006064),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            ...notas.map((n) => _notaCard(n, primaryCyan)),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

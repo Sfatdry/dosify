@@ -5,7 +5,8 @@ import 'package:uuid/uuid.dart';
 
 class TratamientoScreen extends StatefulWidget {
   final String? userName; 
-  const TratamientoScreen({super.key, this.userName});
+  final String userId;
+  const TratamientoScreen({super.key, this.userName, required this.userId});
 
   @override
   State<TratamientoScreen> createState() => _TratamientoScreenState();
@@ -31,12 +32,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
   }
 
   Future<void> _obtenerUsuarioActivo() async {
-    // Directly use the authenticated user's ID. This guarantees that treatments are
-    // always linked to the currently logged‑in user and prevents accidental association
-    // with another account's data.
-    _currentUserId = supabase.auth.currentUser?.id;
-    // If for some reason the auth user is null (e.g., not logged in), keep the loading
-    // flag true so the UI can handle the missing session gracefully.
+    _currentUserId = widget.userId;
     if (mounted) {
       setState(() => _isLoadingUser = false);
     }

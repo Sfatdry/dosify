@@ -3,11 +3,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class InventoryScreen extends StatelessWidget {
   final String userName;
+  final String userId;
   final VoidCallback? onVerFarmacias;
 
   const InventoryScreen({
     super.key,
     required this.userName,
+    required this.userId,
     this.onVerFarmacias,
   }); 
   
@@ -15,166 +17,175 @@ class InventoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
     final SupabaseClient supabase = Supabase.instance.client;
+    final String currentUserId = userId;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      // ¡OJO! SIN AppBar aquí dentro para evitar que se vea duplicado
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: supabase.from('medicamento').stream(primaryKey: ['id']).order('nombre', ascending: true),
-        builder: (context, medSnapshot) {
-          if (medSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: primaryCyan));
-          }
-
-          if (medSnapshot.hasError) {
-            return Center(
-              child: Text(
-                "Error al cargar medicamentos: ${medSnapshot.error}",
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
-
-          final medicamentos = medSnapshot.data ?? [];
+        stream: supabase.from('tratamiento').stream(primaryKey: ['id']).eq('usuario_id', currentUserId),
+        builder: (context, tratSnapshot) {
+          final userTratamientos = tratSnapshot.data ?? [];
+          final userTratamientoIds = userTratamientos.map((t) => t['id'].toString()).toSet();
 
           return StreamBuilder<List<Map<String, dynamic>>>(
-            stream: supabase.from('inventario').stream(primaryKey: ['id']),
-            builder: (context, invSnapshot) {
-              if (invSnapshot.connectionState == ConnectionState.waiting) {
+            stream: supabase.from('medicamento').stream(primaryKey: ['id']).order('nombre', ascending: true),
+            builder: (context, medSnapshot) {
+              if (medSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator(color: primaryCyan));
               }
 
-              if (invSnapshot.hasError) {
+              if (medSnapshot.hasError) {
                 return Center(
                   child: Text(
-                    "Error al cargar inventario: ${invSnapshot.error}",
+                    "Error al cargar medicamentos: ${medSnapshot.error}",
                     style: const TextStyle(color: Colors.red),
                   ),
                 );
               }
 
-              final inventarios = invSnapshot.data ?? [];
-              final Map<String, Map<String, dynamic>> inventarioMap = {
-                for (var inv in inventarios) inv['medicamento_id'].toString(): inv
-              };
+              final allMedicamentos = medSnapshot.data ?? [];
+              final medicamentos = allMedicamentos.where((m) => userTratamientoIds.contains(m['tratamiento_id'].toString())).toList();
 
-              // 1. Calcular métricas para el resumen de inventario
-              int suficiente = 0;
-              int bajo = 0;
-              int critico = 0;
+              return StreamBuilder<List<Map<String, dynamic>>>(
+                stream: supabase.from('inventario').stream(primaryKey: ['id']),
+                builder: (context, invSnapshot) {
+                  if (invSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: primaryCyan));
+                  }
 
-              final List<Map<String, dynamic>> reabastecimientoList = [];
+                  if (invSnapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        "Error al cargar inventario: ${invSnapshot.error}",
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    );
+                  }
 
-              for (var med in medicamentos) {
-                final String id = med['id'].toString();
-                final inv = inventarioMap[id];
-                final int cantidadInicial = inv?['cantidad_inicial'] ?? 30;
-                final int cantidadActual = inv?['cantidad_actual'] ?? cantidadInicial;
-                final double ratio = cantidadInicial > 0 ? (cantidadActual / cantidadInicial) : 0.0;
+                  final inventarios = invSnapshot.data ?? [];
+                  final Map<String, Map<String, dynamic>> inventarioMap = {
+                    for (var inv in inventarios) inv['medicamento_id'].toString(): inv
+                  };
 
-                // Clasificación de stock
-                if (ratio <= 0.15 || cantidadActual <= 3) {
-                  critico++;
-                } else if (ratio <= 0.35) {
-                  bajo++;
-                } else {
-                  suficiente++;
-                }
+                  // 1. Calcular métricas para el resumen de inventario
+                  int suficiente = 0;
+                  int bajo = 0;
+                  int critico = 0;
 
-                // Si el stock es bajo o crítico (ratio <= 0.30 o cantidadActual <= 5)
-                if (ratio <= 0.30 || cantidadActual <= 5) {
-                  reabastecimientoList.add({
-                    'nombre': med['nombre'],
-                    'cantidad_inicial': cantidadInicial,
-                    'cantidad_actual': cantidadActual,
-                    'duracion_dias': med['duracion_dias'] ?? 7,
-                  });
-                }
-              }
+                  final List<Map<String, dynamic>> reabastecimientoList = [];
 
-              return Center( 
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 900), 
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(30),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center, 
-                      children: [
-                        // 1. FILA DE MEDICAMENTOS (Scroll Horizontal)
-                        const Text(
-                          "Medicamentos en uso", 
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF006064))
+                  for (var med in medicamentos) {
+                    final String id = med['id'].toString();
+                    final inv = inventarioMap[id];
+                    final int cantidadInicial = inv?['cantidad_inicial'] ?? 30;
+                    final int cantidadActual = inv?['cantidad_actual'] ?? cantidadInicial;
+                    final double ratio = cantidadInicial > 0 ? (cantidadActual / cantidadInicial) : 0.0;
+
+                    // Clasificación de stock
+                    if (ratio <= 0.15 || cantidadActual <= 3) {
+                      critico++;
+                    } else if (ratio <= 0.35) {
+                      bajo++;
+                    } else {
+                      suficiente++;
+                    }
+
+                    // Si el stock es bajo o crítico (ratio <= 0.30 o cantidadActual <= 5)
+                    if (ratio <= 0.30 || cantidadActual <= 5) {
+                      reabastecimientoList.add({
+                        'nombre': med['nombre'],
+                        'cantidad_inicial': cantidadInicial,
+                        'cantidad_actual': cantidadActual,
+                        'duracion_dias': med['duracion_dias'] ?? 7,
+                      });
+                    }
+                  }
+
+                  return Center( 
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 900), 
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(30),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center, 
+                          children: [
+                            // 1. FILA DE MEDICAMENTOS (Scroll Horizontal)
+                            const Text(
+                              "Medicamentos en uso", 
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF006064))
+                            ),
+                            const SizedBox(height: 20),
+                            medicamentos.isEmpty
+                                ? Container(
+                                    height: 150,
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      "No hay medicamentos registrados.",
+                                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                                    ),
+                                  )
+                                : SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: List.generate(medicamentos.length, (index) {
+                                        final med = medicamentos[index];
+                                        final String id = med['id'].toString();
+                                        final String nombre = med['nombre'] ?? 'Sin nombre';
+                                        final inv = inventarioMap[id];
+                                        final int cantidadInicial = inv?['cantidad_inicial'] ?? 30;
+                                        final int cantidadActual = inv?['cantidad_actual'] ?? cantidadInicial;
+                                        final double progress = cantidadInicial > 0 
+                                            ? (cantidadActual / cantidadInicial).clamp(0.0, 1.0) 
+                                            : 0.0;
+                                        final int duracionDias = med['duracion_dias'] ?? 7;
+
+                                        // Determinar color y alertas según estado
+                                        Color color;
+                                        bool hasAlert = false;
+                                        if (progress <= 0.15 || cantidadActual <= 3) {
+                                          color = Colors.pink;
+                                          hasAlert = true;
+                                        } else if (progress <= 0.35) {
+                                          color = Colors.orange;
+                                          hasAlert = true;
+                                        } else {
+                                          color = Colors.teal;
+                                        }
+
+                                        final String alertMinText = "${(cantidadInicial * 0.2).round()} unidades";
+
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            right: index < medicamentos.length - 1 ? 20.0 : 0.0
+                                          ),
+                                          child: _buildMedCard(
+                                            nombre,
+                                            "$cantidadActual / $cantidadInicial",
+                                            progress,
+                                            "$duracionDias días",
+                                            alertMinText,
+                                            color,
+                                            hasAlert,
+                                          ),
+                                        );
+                                      }),
+                                    ),
+                                  ),
+                            const SizedBox(height: 40),
+
+                            // 2. RESUMEN DE INVENTARIO
+                            _buildResumenSeccion(primaryCyan, suficiente, bajo, critico),
+                            const SizedBox(height: 40),
+
+                            // 3. REABASTECIMIENTO
+                            _buildReabastecimientoSeccion(reabastecimientoList),
+                          ],
                         ),
-                        const SizedBox(height: 20),
-                        medicamentos.isEmpty
-                            ? Container(
-                                height: 150,
-                                alignment: Alignment.center,
-                                child: const Text(
-                                  "No hay medicamentos registrados.",
-                                  style: TextStyle(color: Colors.grey, fontSize: 16),
-                                ),
-                              )
-                            : SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: List.generate(medicamentos.length, (index) {
-                                    final med = medicamentos[index];
-                                    final String id = med['id'].toString();
-                                    final String nombre = med['nombre'] ?? 'Sin nombre';
-                                    final inv = inventarioMap[id];
-                                    final int cantidadInicial = inv?['cantidad_inicial'] ?? 30;
-                                    final int cantidadActual = inv?['cantidad_actual'] ?? cantidadInicial;
-                                    final double progress = cantidadInicial > 0 
-                                        ? (cantidadActual / cantidadInicial).clamp(0.0, 1.0) 
-                                        : 0.0;
-                                    final int duracionDias = med['duracion_dias'] ?? 7;
-
-                                    // Determinar color y alertas según estado
-                                    Color color;
-                                    bool hasAlert = false;
-                                    if (progress <= 0.15 || cantidadActual <= 3) {
-                                      color = Colors.pink;
-                                      hasAlert = true;
-                                    } else if (progress <= 0.35) {
-                                      color = Colors.orange;
-                                      hasAlert = true;
-                                    } else {
-                                      color = Colors.teal;
-                                    }
-
-                                    final String alertMinText = "${(cantidadInicial * 0.2).round()} unidades";
-
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                        right: index < medicamentos.length - 1 ? 20.0 : 0.0
-                                      ),
-                                      child: _buildMedCard(
-                                        nombre,
-                                        "$cantidadActual / $cantidadInicial",
-                                        progress,
-                                        "$duracionDias días",
-                                        alertMinText,
-                                        color,
-                                        hasAlert,
-                                      ),
-                                    );
-                                  }),
-                                ),
-                              ),
-                        const SizedBox(height: 40),
-
-                        // 2. RESUMEN DE INVENTARIO
-                        _buildResumenSeccion(primaryCyan, suficiente, bajo, critico),
-                        const SizedBox(height: 40),
-
-                        // 3. REABASTECIMIENTO
-                        _buildReabastecimientoSeccion(reabastecimientoList),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           );

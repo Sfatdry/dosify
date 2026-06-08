@@ -4,8 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DietaScreen extends StatefulWidget {
   final String userName;
+  final String userId;
 
-  const DietaScreen({super.key, required this.userName});
+  const DietaScreen({super.key, required this.userName, required this.userId});
 
   @override
   State<DietaScreen> createState() => _DietaScreenState();
@@ -33,9 +34,11 @@ class _DietaScreenState extends State<DietaScreen> {
   }
 
   Future<void> _cargarTratamientos() async {
+    final String userId = widget.userId;
     final data = await supabase
         .from('tratamiento')
         .select('id, nombre')
+        .eq('usuario_id', userId)
         .order('nombre', ascending: true);
     if (mounted) {
       setState(() => _tratamientos = List<Map<String, dynamic>>.from(data));
@@ -126,183 +129,196 @@ class _DietaScreenState extends State<DietaScreen> {
   @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
+    final String currentUserId = widget.userId;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
-        child: Center(
-          child: Column(
-            children: [
-              // ── FORMULARIO ────────────────────────────────────────
-              Container(
-                constraints: const BoxConstraints(maxWidth: 550),
-                padding: const EdgeInsets.all(35),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Encabezado
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: primaryCyan,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: const Icon(Icons.restaurant_rounded, color: Colors.white, size: 28),
-                        ),
-                        const SizedBox(width: 15),
-                        const Text(
-                          "Dieta",
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
-                        ),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: supabase.from('tratamiento').stream(primaryKey: ['id']).eq('usuario_id', currentUserId),
+        builder: (context, tratSnapshot) {
+          final userTratamientos = tratSnapshot.data ?? [];
+          final userTratamientoIds = userTratamientos.map((t) => t['id'].toString()).toSet();
+
+          return Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
+              child: Column(
+                children: [
+                  // ── FORMULARIO ────────────────────────────────────────
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 550),
+                    padding: const EdgeInsets.all(35),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 20,
+                          offset: const Offset(0, 4),
+                        )
                       ],
                     ),
-                    const SizedBox(height: 35),
-
-                    // Selector de tratamiento
-                    _buildLabel("Tratamiento asociado"),
-                    _tratamientos.isEmpty
-                        ? const Text(
-                            "Crea un tratamiento primero",
-                            style: TextStyle(color: Colors.grey, fontSize: 13),
-                          )
-                        : Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF0F9FF),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(color: const Color(0xFFBAE6FD)),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                hint: const Text("Selecciona un tratamiento", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
-                                value: _tratamientoSeleccionadoId,
-                                onChanged: (val) => setState(() => _tratamientoSeleccionadoId = val),
-                                items: _tratamientos.map((t) {
-                                  return DropdownMenuItem<String>(
-                                    value: t['id'].toString(),
-                                    child: Text(t['nombre'] ?? 'Sin nombre', style: const TextStyle(color: Color(0xFF006064))),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ),
-                    const SizedBox(height: 25),
-
-                    // Descripción
-                    _buildLabel("Descripción"),
-                    TextField(
-                      controller: _descripcionController,
-                      maxLines: 5,
-                      decoration: _inputStyle("Describe la dieta recomendada...", null),
-                    ),
-                    const SizedBox(height: 25),
-
-                    // Fecha inicio
-                    _buildLabel("Fecha de Inicio"),
-                    TextField(
-                      controller: _fechaInicioController,
-                      readOnly: true,
-                      onTap: () => _selectDate(context, _fechaInicioController, true),
-                      decoration: _inputStyle("dd/mm/aaaa", Icons.calendar_today_outlined),
-                    ),
-                    const SizedBox(height: 25),
-
-                    // Fecha fin
-                    _buildLabel("Fecha de Fin"),
-                    TextField(
-                      controller: _fechaFinController,
-                      readOnly: true,
-                      onTap: () => _selectDate(context, _fechaFinController, false),
-                      decoration: _inputStyle("dd/mm/aaaa", Icons.calendar_today_outlined),
-                    ),
-                    const SizedBox(height: 40),
-
-                    // Botón guardar
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : _guardarDieta,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryCyan,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 22, height: 22,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                              )
-                            : const Text(
-                                "Guardar Dieta",
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 35),
-
-              // ── LISTA EN TIEMPO REAL ────────────────────────────
-              Container(
-                constraints: const BoxConstraints(maxWidth: 550),
-                child: StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: supabase
-                      .from('dieta')
-                      .stream(primaryKey: ['id'])
-                      .order('fecha_inicio', ascending: false),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: primaryCyan));
-                    }
-                    final dietas = snapshot.data ?? [];
-                    if (dietas.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(25),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                        child: const Center(
-                          child: Text("No hay dietas registradas aún.", style: TextStyle(color: Colors.grey, fontSize: 14)),
-                        ),
-                      );
-                    }
-                    return Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          "Dietas registradas",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+                        // Encabezado
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: primaryCyan,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: const Icon(Icons.restaurant_rounded, color: Colors.white, size: 28),
+                            ),
+                            const SizedBox(width: 15),
+                            const Text(
+                              "Dieta",
+                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 15),
-                        ...dietas.map((d) => _dietaCard(d, primaryCyan)),
+                        const SizedBox(height: 35),
+
+                        // Selector de tratamiento
+                        _buildLabel("Tratamiento asociado"),
+                        _tratamientos.isEmpty
+                            ? const Text(
+                                "Crea un tratamiento primero",
+                                style: TextStyle(color: Colors.grey, fontSize: 13),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF0F9FF),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: const Color(0xFFBAE6FD)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    isExpanded: true,
+                                    hint: const Text("Selecciona un tratamiento", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
+                                    value: _tratamientoSeleccionadoId,
+                                    onChanged: (val) => setState(() => _tratamientoSeleccionadoId = val),
+                                    items: _tratamientos.map((t) {
+                                      return DropdownMenuItem<String>(
+                                        value: t['id'].toString(),
+                                        child: Text(t['nombre'] ?? 'Sin nombre', style: const TextStyle(color: Color(0xFF006064))),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                        const SizedBox(height: 25),
+
+                        // Descripción
+                        _buildLabel("Descripción"),
+                        TextField(
+                          controller: _descripcionController,
+                          maxLines: 5,
+                          decoration: _inputStyle("Describe la dieta recomendada...", null),
+                        ),
+                        const SizedBox(height: 25),
+
+                        // Fecha inicio
+                        _buildLabel("Fecha de Inicio"),
+                        TextField(
+                          controller: _fechaInicioController,
+                          readOnly: true,
+                          onTap: () => _selectDate(context, _fechaInicioController, true),
+                          decoration: _inputStyle("dd/mm/aaaa", Icons.calendar_today_outlined),
+                        ),
+                        const SizedBox(height: 25),
+
+                        // Fecha fin
+                        _buildLabel("Fecha de Fin"),
+                        TextField(
+                          controller: _fechaFinController,
+                          readOnly: true,
+                          onTap: () => _selectDate(context, _fechaFinController, false),
+                          decoration: _inputStyle("dd/mm/aaaa", Icons.calendar_today_outlined),
+                        ),
+                        const SizedBox(height: 40),
+
+                        // Botón guardar
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _guardarDieta,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryCyan,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                            ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 22, height: 22,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                  )
+                                : const Text(
+                                    "Guardar Dieta",
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                          ),
+                        ),
                       ],
-                    );
-                  },
-                ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 35),
+
+                  // ── LISTA EN TIEMPO REAL ────────────────────────────
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 550),
+                    child: StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: supabase
+                          .from('dieta')
+                          .stream(primaryKey: ['id'])
+                          .order('fecha_inicio', ascending: false),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator(color: primaryCyan));
+                        }
+                        final allDietas = snapshot.data ?? [];
+                        final dietas = allDietas.where((d) => userTratamientoIds.contains(d['tratamiento_id'].toString())).toList();
+
+                        if (dietas.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.all(25),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                            child: const Center(
+                              child: Text("No hay dietas registradas aún.", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                            ),
+                          );
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Dietas registradas",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF006064)),
+                            ),
+                            const SizedBox(height: 15),
+                            ...dietas.map((d) => _dietaCard(d, primaryCyan)),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
+
+
 
   Widget _dietaCard(Map<String, dynamic> d, Color primaryCyan) {
     final inicio = d['fecha_inicio'] ?? '';
