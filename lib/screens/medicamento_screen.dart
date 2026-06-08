@@ -89,7 +89,6 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
         'duracion_dias': int.tryParse(_duracionController.text.trim()) ?? 7,
         'es_critico': _isCritico,
         'tratamiento_id': tId,
-        'created_at': DateTime.now().toIso8601String(),
       };
 
       await supabase.from('medicamento').insert(mapMedicamento);
