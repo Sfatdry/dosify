@@ -48,7 +48,7 @@ class NotificationService {
 
     const AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'dosis_channel',
+      'dosis_channel_v3',
       'Recordatorios de Medicación',
       channelDescription: 'Canal para recordatorios de pastillas',
       importance: Importance.max,
@@ -56,6 +56,8 @@ class NotificationService {
       ticker: 'ticker',
       color: Color(0xFF00ACC1),
       icon: '@mipmap/ic_launcher',
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('notification'),
     );
 
     const NotificationDetails notificationDetails =
