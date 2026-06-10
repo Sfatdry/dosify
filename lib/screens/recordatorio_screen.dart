@@ -32,14 +32,37 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
 
   TimeOfDay _horaSeleccionada = const TimeOfDay(hour: 7, minute: 53);
 
+  late final RealtimeChannel _medicamentoChannel;
+  late final RealtimeChannel _tratamientoChannel;
+
   @override
   void initState() {
     super.initState();
     _cargarDatosIniciales();
+    
+    _medicamentoChannel = supabase.channel('public:medicamento').onPostgresChanges(
+      event: PostgresChangeEvent.all,
+      schema: 'public',
+      table: 'medicamento',
+      callback: (payload) {
+        _cargarDatosIniciales();
+      },
+    )..subscribe();
+
+    _tratamientoChannel = supabase.channel('public:tratamiento').onPostgresChanges(
+      event: PostgresChangeEvent.all,
+      schema: 'public',
+      table: 'tratamiento',
+      callback: (payload) {
+        _cargarDatosIniciales();
+      },
+    )..subscribe();
   }
 
   @override
   void dispose() {
+    supabase.removeChannel(_medicamentoChannel);
+    supabase.removeChannel(_tratamientoChannel);
     _repeticionesController.dispose();
     super.dispose();
   }
@@ -263,12 +286,16 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
           final body = "Es hora de tomar tu ${selectedMed['nombre'] ?? 'medicamento'}.";
           // Usar un id único basado en la fecha para la notificación
           final id = currentDoseTime.millisecondsSinceEpoch ~/ 100000;
-          await NotificationService().scheduleNotification(
-            id: id,
-            title: title,
-            body: body,
-            scheduledDate: currentDoseTime,
-          );
+          try {
+            await NotificationService().scheduleNotification(
+              id: id,
+              title: title,
+              body: body,
+              scheduledDate: currentDoseTime,
+            );
+          } catch (e) {
+            print("Warning: Could not schedule local notification: $e");
+          }
         }
         
         currentDoseTime = currentDoseTime.add(Duration(hours: freqHoras));

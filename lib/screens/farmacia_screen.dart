@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class FarmaciaScreen extends StatefulWidget {
   final String userName;
@@ -25,6 +26,42 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
   final TextEditingController _longitudController = TextEditingController();
 
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _obtenerUbicacionActual();
+  }
+
+  Future<void> _obtenerUbicacionActual() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition();
+    if (mounted) {
+      setState(() {
+        _latitudController.text = position.latitude.toString();
+        _longitudController.text = position.longitude.toString();
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -53,6 +90,7 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
 
     try {
       await supabase.from('farmacia').insert({
+        'usuario_id': widget.userId,
         'nombre': nombre,
         'direccion': direccion,
         'latitud': double.tryParse(_latitudController.text.trim()),
@@ -103,6 +141,9 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
   @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
+  // Determine if the layout should adapt for mobile screens
+  final double screenWidth = MediaQuery.of(context).size.width;
+  final bool isMobile = screenWidth < 600;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -178,45 +219,68 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                     ),
                     const SizedBox(height: 25),
 
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildLabel("Latitud"),
-                              TextField(
-                                controller: _latitudController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                      signed: true,
-                                    ),
-                                decoration: _inputStyle("-12.0464", null),
-                              ),
-                            ],
-                          ),
+                                isMobile
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabel("Latitud"),
+                      TextField(
+                        controller: _latitudController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: true,
                         ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildLabel("Longitud"),
-                              TextField(
-                                controller: _longitudController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                      signed: true,
-                                    ),
-                                decoration: _inputStyle("-77.0428", null),
-                              ),
-                            ],
-                          ),
+                        decoration: _inputStyle("-12.0464", null),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel("Longitud"),
+                      TextField(
+                        controller: _longitudController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: true,
                         ),
-                      ],
-                    ),
+                        decoration: _inputStyle("-77.0428", null),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel("Latitud"),
+                            TextField(
+                              controller: _latitudController,
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: true,
+                              ),
+                              decoration: _inputStyle("-12.0464", null),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel("Longitud"),
+                            TextField(
+                              controller: _longitudController,
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                                signed: true,
+                              ),
+                              decoration: _inputStyle("-77.0428", null),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                     const SizedBox(height: 35),
 
                     SizedBox(
@@ -263,6 +327,7 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                   stream: supabase
                       .from('farmacia')
                       .stream(primaryKey: ['id'])
+                      .eq('usuario_id', widget.userId)
                       .order('nombre', ascending: true),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {

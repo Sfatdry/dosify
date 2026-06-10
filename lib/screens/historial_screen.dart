@@ -21,6 +21,8 @@ class _HistorialScreenState extends State<HistorialScreen> {
   @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 600;
     final String currentUserId = widget.userId;
 
     return Scaffold(
@@ -125,54 +127,92 @@ class _HistorialScreenState extends State<HistorialScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: const [
-                                          Text(
-                                            "Historial de Cumplimiento",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1E293B),
+                                  isMobile
+                                      ? Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              "Historial de Cumplimiento",
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF1E293B),
+                                              ),
                                             ),
-                                          ),
-                                          Text(
-                                            "Seguimiento acumulado del tratamiento",
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey,
+                                            const Text(
+                                              "Seguimiento acumulado del tratamiento",
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            "${porcentajeAdherencia.toStringAsFixed(0)}%",
-                                            style: const TextStyle(
-                                              fontSize: 28,
-                                              fontWeight: FontWeight.bold,
-                                              color: primaryCyan,
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              "${porcentajeAdherencia.toStringAsFixed(0)}%",
+                                              style: const TextStyle(
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.bold,
+                                                color: primaryCyan,
+                                              ),
                                             ),
-                                          ),
-                                          const Text(
-                                            "Adherencia",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
+                                            const Text(
+                                              "Adherencia",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                          ],
+                                        )
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: const [
+                                                Text(
+                                                  "Historial de Cumplimiento",
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF1E293B),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  "Seguimiento acumulado del tratamiento",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  "${porcentajeAdherencia.toStringAsFixed(0)}%",
+                                                  style: const TextStyle(
+                                                    fontSize: 28,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: primaryCyan,
+                                                  ),
+                                                ),
+                                                const Text(
+                                                  "Adherencia",
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                   const SizedBox(height: 25),
 
                                   const Text(

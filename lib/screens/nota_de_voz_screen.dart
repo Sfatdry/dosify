@@ -4,6 +4,8 @@ import 'package:record/record.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'package:audioplayers/audioplayers.dart';
 
 class NotaDeVozScreen extends StatefulWidget {
   final String userName;
@@ -36,6 +38,10 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
   final AudioRecorder _audioRecorder = AudioRecorder();
   final stt.SpeechToText _speech = stt.SpeechToText();
   String? _audioPath;
+  
+  // Reproductor
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _playingNotaId;
 
   @override
   void initState() {
@@ -120,14 +126,12 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
     try {
       String audioUrl = "nota_${DateTime.now().millisecondsSinceEpoch}";
       
-      // Subir el audio a Supabase Storage
+      // Guardar el audio en base64 para evitar depender del bucket 'audios'
       if (_audioPath != null) {
         final file = File(_audioPath!);
-        final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        final String pathInStorage = '${widget.userId}/$fileName';
-        
-        await supabase.storage.from('audios').upload(pathInStorage, file);
-        audioUrl = supabase.storage.from('audios').getPublicUrl(pathInStorage);
+        final bytes = await file.readAsBytes();
+        final base64String = base64Encode(bytes);
+        audioUrl = 'base64:$base64String';
       }
 
       await supabase.from('notavoz').insert({
@@ -169,7 +173,42 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
   @override
   void dispose() {
     _notaController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  Future<void> _playAudio(String id, String urlAudio) async {
+    try {
+      if (_playingNotaId == id) {
+        await _audioPlayer.stop();
+        setState(() => _playingNotaId = null);
+        return;
+      }
+      
+      final parts = urlAudio.split('|');
+      final audioData = parts[0];
+      
+      if (audioData.startsWith('base64:')) {
+        final base64String = audioData.replaceFirst('base64:', '');
+        final bytes = base64Decode(base64String);
+        
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/temp_audio_$id.m4a');
+        await file.writeAsBytes(bytes);
+        
+        setState(() => _playingNotaId = id);
+        
+        await _audioPlayer.play(DeviceFileSource(file.path));
+        
+        _audioPlayer.onPlayerComplete.listen((_) {
+          if (mounted) setState(() => _playingNotaId = null);
+        });
+      } else {
+        _snack("Formato de audio no soportado.", Colors.orange);
+      }
+    } catch (e) {
+      _snack("Error al reproducir audio: $e", Colors.red);
+    }
   }
 
   @override
@@ -550,14 +589,20 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: primaryCyan.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+          GestureDetector(
+            onTap: () => _playAudio(n['id'].toString(), n['url_audio'] ?? ''),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _playingNotaId == n['id'].toString() ? Colors.green.withValues(alpha: 0.2) : primaryCyan.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                _playingNotaId == n['id'].toString() ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                color: _playingNotaId == n['id'].toString() ? Colors.green : primaryCyan,
+                size: 28,
+              ),
             ),
-            //  SOLUCIÓN CORRECTA
-            child: Icon(Icons.mic_rounded, color: primaryCyan, size: 22),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -565,7 +610,7 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  n['url_audio'] ?? 'Sin descripción',
+                  (n['url_audio'] ?? '').contains('|') ? (n['url_audio'] as String).split('|').skip(1).join('|') : (n['url_audio'] ?? 'Sin descripción'),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

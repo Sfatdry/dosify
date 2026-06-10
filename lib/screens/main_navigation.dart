@@ -108,8 +108,18 @@ class _MainNavigationState extends State<MainNavigation> {
       if (!status.isGranted) {
         await Permission.microphone.request();
       }
+      
+      final notifStatus = await Permission.notification.status;
+      if (!notifStatus.isGranted) {
+        await Permission.notification.request();
+      }
+
+      final alarmStatus = await Permission.scheduleExactAlarm.status;
+      if (!alarmStatus.isGranted) {
+        await Permission.scheduleExactAlarm.request();
+      }
     } catch (e) {
-      debugPrint("Error requesting microphone permission: $e");
+      debugPrint("Error requesting permissions: $e");
     }
   }
 
@@ -119,13 +129,19 @@ class _MainNavigationState extends State<MainNavigation> {
         ? widget.userName[0].toUpperCase()
         : "A";
 
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 600;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
         children: [
           // --- HEADER PRINCIPAL ÚNICO ---
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 15 : 30,
+              vertical: isMobile ? 10 : 15,
+            ),
             color: Colors.white,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -147,19 +163,20 @@ class _MainNavigationState extends State<MainNavigation> {
                     const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           "Dosify",
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: isMobile ? 18 : 22,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF006064),
+                            color: const Color(0xFF006064),
                           ),
                         ),
-                        Text(
-                          "Control inteligente de medicamentos",
-                          style: TextStyle(fontSize: 11, color: Colors.grey),
-                        ),
+                        if (!isMobile)
+                          const Text(
+                            "Control inteligente de medicamentos",
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
                       ],
                     ),
                   ],
@@ -169,29 +186,30 @@ class _MainNavigationState extends State<MainNavigation> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
-                          "Bienvenida",
-                          style: TextStyle(fontSize: 11, color: Colors.grey),
-                        ),
+                        if (!isMobile)
+                          const Text(
+                            "Bienvenida",
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
                         Text(
                           widget.userName,
-                          style: const TextStyle(
-                            fontSize: 15,
+                          style: TextStyle(
+                            fontSize: isMobile ? 13 : 15,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF006064),
+                            color: const Color(0xFF006064),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(width: 12),
                     CircleAvatar(
-                      radius: 18,
+                      radius: isMobile ? 15 : 18,
                       backgroundColor: const Color(0xFF00C853),
                       child: Text(
                         initial,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 14,
+                          fontSize: isMobile ? 12 : 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

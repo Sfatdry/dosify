@@ -180,6 +180,8 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
     final String currentUserId = widget.userId;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 600;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -323,7 +325,7 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                           // 2. FORMULARIO DE DETALLES
                           Container(
                             constraints: const BoxConstraints(maxWidth: 550),
-                            padding: const EdgeInsets.all(30),
+                            padding: EdgeInsets.all(isMobile ? 15 : 30),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(25),
@@ -352,26 +354,28 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 15),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: const [
-                                        Text(
-                                          "Detalles del Medicamento",
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF006064),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: const [
+                                          Text(
+                                            "Detalles del Medicamento",
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF006064),
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          "Configuración y dosificación",
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 14,
+                                          Text(
+                                            "Configuración y dosificación",
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -387,12 +391,9 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                                 ),
                                 const SizedBox(height: 25),
 
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                isMobile
+                                    ? Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           _buildLabel("Dosis (ej: 500mg)"),
                                           _buildTextField(
@@ -402,18 +403,8 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                                             "Ej: 1 tableta",
                                             TextInputType.text,
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 20),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          _buildLabel(
-                                            "Pastillas por caja (Stock)",
-                                          ),
+                                          const SizedBox(height: 25),
+                                          _buildLabel("Pastillas por caja (Stock)"),
                                           _buildTextField(
                                             _stockController,
                                             Icons.inventory,
@@ -422,18 +413,51 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                                             TextInputType.number,
                                           ),
                                         ],
+                                      )
+                                    : Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _buildLabel("Dosis (ej: 500mg)"),
+                                                _buildTextField(
+                                                  _dosisController,
+                                                  Icons.blur_on,
+                                                  primaryCyan,
+                                                  "Ej: 1 tableta",
+                                                  TextInputType.text,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 20),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _buildLabel(
+                                                  "Pastillas por caja (Stock)",
+                                                ),
+                                                _buildTextField(
+                                                  _stockController,
+                                                  Icons.inventory,
+                                                  primaryCyan,
+                                                  "Ej: 30",
+                                                  TextInputType.number,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
-                                ),
                                 const SizedBox(height: 25),
 
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                isMobile
+                                    ? Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           _buildLabel("Frecuencia (horas)"),
                                           _buildTextField(
@@ -443,15 +467,7 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                                             "Ej: 8",
                                             TextInputType.number,
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 20),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
+                                          const SizedBox(height: 25),
                                           _buildLabel("Duración (días)"),
                                           _buildTextField(
                                             _duracionController,
@@ -461,10 +477,44 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                                             TextInputType.number,
                                           ),
                                         ],
+                                      )
+                                    : Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _buildLabel("Frecuencia (horas)"),
+                                                _buildTextField(
+                                                  _frecuenciaController,
+                                                  Icons.access_time,
+                                                  primaryCyan,
+                                                  "Ej: 8",
+                                                  TextInputType.number,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 20),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _buildLabel("Duración (días)"),
+                                                _buildTextField(
+                                                  _duracionController,
+                                                  Icons.calendar_today_outlined,
+                                                  primaryCyan,
+                                                  "Ej: 7",
+                                                  TextInputType.number,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
-                                ),
                                 const SizedBox(height: 30),
 
                                 GestureDetector(

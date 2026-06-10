@@ -82,6 +82,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final String horaHoy = DateFormat('h:mm a').format(DateTime.now());
     final String currentUserId = widget.userId;
 
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isMobile = screenWidth < 600;
+
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: supabase
           .from('tratamiento')
@@ -118,7 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 800),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(30),
+                    padding: EdgeInsets.all(isMobile ? 15 : 30),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -131,20 +134,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               children: [
                                 Text(
                                   "¡Hola, ${widget.userName}! 👋",
-                                  style: const TextStyle(
-                                    fontSize: 28,
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 22 : 28,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF006064),
+                                    color: const Color(0xFF006064),
                                   ),
                                 ),
                                 const SizedBox(height: 5),
-                                const Text(
-                                  "Control inteligente de tus medicamentos",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
+                                if (!isMobile)
+                                  const Text(
+                                    "Control inteligente de tus medicamentos",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                             Column(
@@ -152,17 +156,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               children: [
                                 Text(
                                   fechaHoy,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.grey,
                                     fontWeight: FontWeight.w500,
+                                    fontSize: isMobile ? 12 : 14,
                                   ),
                                 ),
                                 Text(
                                   horaHoy,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: primaryCyan,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: isMobile ? 14 : 16,
                                   ),
                                 ),
                               ],
@@ -172,282 +177,133 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 35),
 
                         // 1. SECCIÓN DE CONTADORES CONECTADOS A SUPABASE EN TIEMPO REAL
-                        Row(
-                          children: [
-                            // Contador Tratamientos Activos
-                            Expanded(
-                              child: _buildContadorCard(
-                                "Tratamientos activos",
-                                tratamientos
-                                    .where(
-                                      (t) =>
-                                          t['estado']
-                                              ?.toString()
-                                              .toLowerCase() ==
-                                          'activo',
-                                    )
-                                    .length
-                                    .toString(),
-                                Colors.blue.shade400,
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            // Contador Dosis Tomadas Hoy
-                            Expanded(
-                              child: StreamBuilder<List<Map<String, dynamic>>>(
-                                stream: supabase
-                                    .from('dosis')
-                                    .stream(primaryKey: ['id'])
-                                    .eq('estado', 'tomada'),
-                                builder: (context, snapshot) {
-                                  final allDosis = snapshot.data ?? [];
-                                  final dosisUser = allDosis
-                                      .where(
-                                        (d) => medicamentoIds.contains(
-                                          d['medicamento_id'].toString(),
-                                        ),
-                                      )
-                                      .toList();
-
-                                  final inicioHoy = DateTime.parse(
-                                    _obtenerFechaHoyInicio(),
-                                  );
-                                  final finHoy = DateTime.parse(
-                                    _obtenerFechaHoyFin(),
-                                  );
-
-                                  final dosisHoy = dosisUser.where((d) {
-                                    if (d['fecha_hora'] == null) return false;
-                                    final fechaDosis = DateTime.parse(
-                                      d['fecha_hora'],
-                                    ).toLocal();
-                                    return fechaDosis.isAfter(inicioHoy) &&
-                                        fechaDosis.isBefore(finHoy);
-                                  }).toList();
-
-                                  return _buildContadorCard(
-                                    "Dosis tomadas hoy",
-                                    dosisHoy.length.toString(),
-                                    Colors.green.shade400,
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            // Contador Dosis Pendientes
-                            Expanded(
-                              child: StreamBuilder<List<Map<String, dynamic>>>(
-                                stream: supabase
-                                    .from('dosis')
-                                    .stream(primaryKey: ['id'])
-                                    .eq('estado', 'pendiente'),
-                                builder: (context, snapshot) {
-                                  final allDosis = snapshot.data ?? [];
-                                  final dosisUser = allDosis
-                                      .where(
-                                        (d) => medicamentoIds.contains(
-                                          d['medicamento_id'].toString(),
-                                        ),
-                                      )
-                                      .toList();
-
-                                  final inicioHoy = DateTime.parse(
-                                    _obtenerFechaHoyInicio(),
-                                  );
-                                  final finHoy = DateTime.parse(
-                                    _obtenerFechaHoyFin(),
-                                  );
-
-                                  final dosisPendientesHoy = dosisUser.where((
-                                    d,
-                                  ) {
-                                    if (d['fecha_hora'] == null) return false;
-                                    final fechaDosis = DateTime.parse(
-                                      d['fecha_hora'],
-                                    ).toLocal();
-                                    return fechaDosis.isAfter(inicioHoy) &&
-                                        fechaDosis.isBefore(finHoy);
-                                  }).toList();
-
-                                  return _buildContadorCard(
-                                    "Dosis pendientes",
-                                    dosisPendientesHoy.length.toString(),
-                                    Colors.orange.shade400,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 35),
-
-                        // 2. PRÓXIMAS DOSIS Y HISTORIAL EN PARALELO
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Bloque Izquierdo: Próximas Dosis (Pendientes)
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(25),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.access_time,
-                                          color: primaryCyan,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Text(
-                                          "Próximas dosis",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF006064),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 20),
-                                    StreamBuilder<List<Map<String, dynamic>>>(
-                                      stream: supabase
-                                          .from('dosis')
-                                          .stream(primaryKey: ['id'])
-                                          .eq('estado', 'pendiente'),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const Center(
-                                            child: CircularProgressIndicator(
-                                              color: primaryCyan,
+                        isMobile
+                            ? Column(
+                                children: [
+                                  _buildContadorCard(
+                                    "Tratamientos activos",
+                                    tratamientos
+                                        .where(
+                                          (t) =>
+                                              t['estado']
+                                                  ?.toString()
+                                                  .toLowerCase() ==
+                                              'activo',
+                                        )
+                                        .length
+                                        .toString(),
+                                    Colors.blue.shade400,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  StreamBuilder<List<Map<String, dynamic>>>(
+                                    stream: supabase
+                                        .from('dosis')
+                                        .stream(primaryKey: ['id'])
+                                        .eq('estado', 'tomada'),
+                                    builder: (context, snapshot) {
+                                      final allDosis = snapshot.data ?? [];
+                                      final dosisUser = allDosis
+                                          .where(
+                                            (d) => medicamentoIds.contains(
+                                              d['medicamento_id'].toString(),
                                             ),
-                                          );
-                                        }
+                                          )
+                                          .toList();
 
-                                        final allDosis = snapshot.data ?? [];
-                                        final dosisUser = allDosis
-                                            .where(
-                                              (d) => medicamentoIds.contains(
-                                                d['medicamento_id'].toString(),
-                                              ),
-                                            )
-                                            .toList();
+                                      final inicioHoy = DateTime.parse(
+                                        _obtenerFechaHoyInicio(),
+                                      );
+                                      final finHoy = DateTime.parse(
+                                        _obtenerFechaHoyFin(),
+                                      );
 
-                                        final inicioHoy = DateTime.parse(
-                                          _obtenerFechaHoyInicio(),
-                                        );
-                                        final finHoy = DateTime.parse(
-                                          _obtenerFechaHoyFin(),
-                                        );
+                                      final dosisHoy = dosisUser.where((d) {
+                                        if (d['fecha_hora'] == null) return false;
+                                        final fechaDosis = DateTime.parse(
+                                          d['fecha_hora'],
+                                        ).toLocal();
+                                        return fechaDosis.isAfter(inicioHoy) &&
+                                            fechaDosis.isBefore(finHoy);
+                                      }).toList();
 
-                                        final listaDosis = dosisUser.where((d) {
-                                          if (d['fecha_hora'] == null)
-                                            return false;
-                                          final fechaDosis = DateTime.parse(
-                                            d['fecha_hora'],
-                                          ).toLocal();
-                                          return fechaDosis.isAfter(
-                                                inicioHoy,
-                                              ) &&
-                                              fechaDosis.isBefore(finHoy);
-                                        }).toList();
-
-                                        if (listaDosis.isEmpty) {
-                                          return const Padding(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 20,
+                                      return _buildContadorCard(
+                                        "Dosis tomadas hoy",
+                                        dosisHoy.length.toString(),
+                                        Colors.green.shade400,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  StreamBuilder<List<Map<String, dynamic>>>(
+                                    stream: supabase
+                                        .from('dosis')
+                                        .stream(primaryKey: ['id'])
+                                        .eq('estado', 'pendiente'),
+                                    builder: (context, snapshot) {
+                                      final allDosis = snapshot.data ?? [];
+                                      final dosisUser = allDosis
+                                          .where(
+                                            (d) => medicamentoIds.contains(
+                                              d['medicamento_id'].toString(),
                                             ),
-                                            child: Text(
-                                              "No tienes dosis pendientes programadas para hoy.",
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                        return ListView.builder(
-                                          shrinkWrap: true,
-                                          physics:
-                                              const NeverScrollableScrollPhysics(),
-                                          itemCount: listaDosis.length,
-                                          itemBuilder: (context, index) {
-                                            final dosis = listaDosis[index];
-                                            final String medId =
-                                                dosis['medicamento_id']
-                                                    ?.toString() ??
-                                                '';
-                                            final String nombreMed =
-                                                medNombreMap[medId] ??
-                                                'Medicamento';
-                                            return _buildDosisRow(
-                                              dosis['id']?.toString() ?? '',
-                                              medId,
-                                              nombreMed,
-                                              'Pendiente',
-                                              _formatearHora(
-                                                dosis['fecha_hora'] ?? '',
-                                              ),
-                                              Colors.orange,
-                                            );
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 25),
+                                          )
+                                          .toList();
 
-                            // Bloque Derecho: Historial de Hoy (Tomadas)
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(25),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.check_circle_outline,
-                                          color: Colors.green,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Text(
-                                          "Historial de hoy",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF006064),
-                                          ),
-                                        ),
-                                      ],
+                                      final inicioHoy = DateTime.parse(
+                                        _obtenerFechaHoyInicio(),
+                                      );
+                                      final finHoy = DateTime.parse(
+                                        _obtenerFechaHoyFin(),
+                                      );
+
+                                      final dosisPendientesHoy = dosisUser.where((
+                                        d,
+                                      ) {
+                                        if (d['fecha_hora'] == null) return false;
+                                        final fechaDosis = DateTime.parse(
+                                          d['fecha_hora'],
+                                        ).toLocal();
+                                        return fechaDosis.isAfter(inicioHoy) &&
+                                            fechaDosis.isBefore(finHoy);
+                                      }).toList();
+
+                                      return _buildContadorCard(
+                                        "Dosis pendientes",
+                                        dosisPendientesHoy.length.toString(),
+                                        Colors.orange.shade400,
+                                      );
+                                    },
+                                  ),
+                                ],
+                              )
+                            : Row(
+                                children: [
+                                  // Contador Tratamientos Activos
+                                  Expanded(
+                                    child: _buildContadorCard(
+                                      "Tratamientos activos",
+                                      tratamientos
+                                          .where(
+                                            (t) =>
+                                                t['estado']
+                                                    ?.toString()
+                                                    .toLowerCase() ==
+                                                'activo',
+                                          )
+                                          .length
+                                          .toString(),
+                                      Colors.blue.shade400,
                                     ),
-                                    const SizedBox(height: 20),
-                                    StreamBuilder<List<Map<String, dynamic>>>(
+                                  ),
+                                  const SizedBox(width: 20),
+                                  // Contador Dosis Tomadas Hoy
+                                  Expanded(
+                                    child: StreamBuilder<List<Map<String, dynamic>>>(
                                       stream: supabase
                                           .from('dosis')
                                           .stream(primaryKey: ['id'])
                                           .eq('estado', 'tomada'),
                                       builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const Center(
-                                            child: CircularProgressIndicator(
-                                              color: Colors.green,
-                                            ),
-                                          );
-                                        }
-
                                         final allDosis = snapshot.data ?? [];
                                         final dosisUser = allDosis
                                             .where(
@@ -464,67 +320,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           _obtenerFechaHoyFin(),
                                         );
 
-                                        final listaHistorial = dosisUser.where((
-                                          d,
-                                        ) {
-                                          if (d['fecha_hora'] == null)
-                                            return false;
+                                        final dosisHoy = dosisUser.where((d) {
+                                          if (d['fecha_hora'] == null) return false;
                                           final fechaDosis = DateTime.parse(
                                             d['fecha_hora'],
                                           ).toLocal();
-                                          return fechaDosis.isAfter(
-                                                inicioHoy,
-                                              ) &&
+                                          return fechaDosis.isAfter(inicioHoy) &&
                                               fechaDosis.isBefore(finHoy);
                                         }).toList();
 
-                                        if (listaHistorial.isEmpty) {
-                                          return const Padding(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 20,
-                                            ),
-                                            child: Text(
-                                              "Aún no has registrado dosis tomadas hoy.",
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                        return ListView.builder(
-                                          shrinkWrap: true,
-                                          physics:
-                                              const NeverScrollableScrollPhysics(),
-                                          itemCount: listaHistorial.length,
-                                          itemBuilder: (context, index) {
-                                            final dosis = listaHistorial[index];
-                                            final String medId =
-                                                dosis['medicamento_id']
-                                                    ?.toString() ??
-                                                '';
-                                            final String nombreMed =
-                                                medNombreMap[medId] ??
-                                                'Medicamento';
-                                            return _buildDosisRow(
-                                              dosis['id']?.toString() ?? '',
-                                              medId,
-                                              nombreMed,
-                                              'Tomada',
-                                              _formatearHora(
-                                                dosis['fecha_hora'] ?? '',
-                                              ),
-                                              Colors.green,
-                                            );
-                                          },
+                                        return _buildContadorCard(
+                                          "Dosis tomadas hoy",
+                                          dosisHoy.length.toString(),
+                                          Colors.green.shade400,
                                         );
                                       },
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  // Contador Dosis Pendientes
+                                  Expanded(
+                                    child: StreamBuilder<List<Map<String, dynamic>>>(
+                                      stream: supabase
+                                          .from('dosis')
+                                          .stream(primaryKey: ['id'])
+                                          .eq('estado', 'pendiente'),
+                                      builder: (context, snapshot) {
+                                        final allDosis = snapshot.data ?? [];
+                                        final dosisUser = allDosis
+                                            .where(
+                                              (d) => medicamentoIds.contains(
+                                                d['medicamento_id'].toString(),
+                                              ),
+                                            )
+                                            .toList();
+
+                                        final inicioHoy = DateTime.parse(
+                                          _obtenerFechaHoyInicio(),
+                                        );
+                                        final finHoy = DateTime.parse(
+                                          _obtenerFechaHoyFin(),
+                                        );
+
+                                        final dosisPendientesHoy = dosisUser.where((
+                                          d,
+                                        ) {
+                                          if (d['fecha_hora'] == null) return false;
+                                          final fechaDosis = DateTime.parse(
+                                            d['fecha_hora'],
+                                          ).toLocal();
+                                          return fechaDosis.isAfter(inicioHoy) &&
+                                              fechaDosis.isBefore(finHoy);
+                                        }).toList();
+
+                                        return _buildContadorCard(
+                                          "Dosis pendientes",
+                                          dosisPendientesHoy.length.toString(),
+                                          Colors.orange.shade400,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
+                        const SizedBox(height: 35),
+
+                        // 2. PRÓXIMAS DOSIS Y HISTORIAL EN PARALELO
+                        isMobile
+                            ? Column(
+                                children: [
+                                  _buildProximasDosis(medNombreMap, medicamentoIds),
+                                  const SizedBox(height: 25),
+                                  _buildHistorialHoy(medNombreMap, medicamentoIds),
+                                ],
+                              )
+                            : Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(child: _buildProximasDosis(medNombreMap, medicamentoIds)),
+                                  const SizedBox(width: 25),
+                                  Expanded(child: _buildHistorialHoy(medNombreMap, medicamentoIds)),
+                                ],
+                              ),
                         const SizedBox(height: 35),
 
                         // 3. ADHERENCIA DEL DÍA
@@ -562,46 +439,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Row(
-                                children: [
-                                  CircularPercentIndicator(
-                                    radius: 50.0,
-                                    lineWidth: 10.0,
-                                    animation: true,
-                                    percent: porcentaje,
-                                    center: Text(
-                                      "${(porcentaje * 100).toInt()}%",
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-                                    ),
-                                    circularStrokeCap: CircularStrokeCap.round,
-                                    progressColor: porcentaje == 1.0 ? Colors.green : const Color(0xFF00ACC1),
-                                    backgroundColor: Colors.grey.shade200,
-                                  ),
-                                  const SizedBox(width: 25),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                              child: isMobile
+                                  ? Column(
                                       children: [
-                                        const Text(
-                                          "Adherencia de Hoy",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF006064),
+                                        CircularPercentIndicator(
+                                          radius: 50.0,
+                                          lineWidth: 10.0,
+                                          animation: true,
+                                          percent: porcentaje,
+                                          center: Text(
+                                            "${(porcentaje * 100).toInt()}%",
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
                                           ),
+                                          circularStrokeCap: CircularStrokeCap.round,
+                                          progressColor: porcentaje == 1.0 ? Colors.green : const Color(0xFF00ACC1),
+                                          backgroundColor: Colors.grey.shade200,
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          porcentaje == 1.0
-                                              ? "¡Excelente trabajo! Has tomado todas tus dosis de hoy."
-                                              : "Has tomado $tomadas de $total dosis programadas para hoy.",
-                                          style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                        const SizedBox(height: 20),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            const Text(
+                                              "Adherencia de Hoy",
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF006064),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              porcentaje == 1.0
+                                                  ? "¡Excelente trabajo! Has tomado todas tus dosis de hoy."
+                                                  : "Has tomado $tomadas de $total dosis programadas para hoy.",
+                                              style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        )
+                                      ],
+                                    )
+                                  : Row(
+                                      children: [
+                                        CircularPercentIndicator(
+                                          radius: 50.0,
+                                          lineWidth: 10.0,
+                                          animation: true,
+                                          percent: porcentaje,
+                                          center: Text(
+                                            "${(porcentaje * 100).toInt()}%",
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+                                          ),
+                                          circularStrokeCap: CircularStrokeCap.round,
+                                          progressColor: porcentaje == 1.0 ? Colors.green : const Color(0xFF00ACC1),
+                                          backgroundColor: Colors.grey.shade200,
                                         ),
+                                        const SizedBox(width: 25),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "Adherencia de Hoy",
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF006064),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                porcentaje == 1.0
+                                                    ? "¡Excelente trabajo! Has tomado todas tus dosis de hoy."
+                                                    : "Has tomado $tomadas de $total dosis programadas para hoy.",
+                                                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                              ),
+                                            ],
+                                          ),
+                                        )
                                       ],
                                     ),
-                                  )
-                                ],
-                              ),
                             );
                           },
                         ),
@@ -1094,4 +1012,242 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  Widget _buildProximasDosis(Map<String, String> medNombreMap, Set<String> medicamentoIds) {
+    const Color primaryCyan = Color(0xFF00ACC1);
+    return Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                color: primaryCyan,
+              ),
+              SizedBox(width: 10),
+              Text(
+                "Próximas dosis",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF006064),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: supabase
+                .from('dosis')
+                .stream(primaryKey: ['id'])
+                .eq('estado', 'pendiente'),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: primaryCyan,
+                  ),
+                );
+              }
+
+              final allDosis = snapshot.data ?? [];
+              final dosisUser = allDosis
+                  .where(
+                    (d) => medicamentoIds.contains(
+                      d['medicamento_id'].toString(),
+                    ),
+                  )
+                  .toList();
+
+              final inicioHoy = DateTime.parse(
+                _obtenerFechaHoyInicio(),
+              );
+              final finHoy = DateTime.parse(
+                _obtenerFechaHoyFin(),
+              );
+
+              final listaDosis = dosisUser.where((d) {
+                if (d['fecha_hora'] == null)
+                  return false;
+                final fechaDosis = DateTime.parse(
+                  d['fecha_hora'],
+                ).toLocal();
+                return fechaDosis.isAfter(
+                      inicioHoy,
+                    ) &&
+                    fechaDosis.isBefore(finHoy);
+              }).toList();
+
+              if (listaDosis.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: 20,
+                  ),
+                  child: Text(
+                    "No tienes dosis pendientes programadas para hoy.",
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                );
+              }
+              return ListView.builder(
+                shrinkWrap: true,
+                physics:
+                    const NeverScrollableScrollPhysics(),
+                itemCount: listaDosis.length,
+                itemBuilder: (context, index) {
+                  final dosis = listaDosis[index];
+                  final String medId =
+                      dosis['medicamento_id']
+                          ?.toString() ??
+                      '';
+                  final String nombreMed =
+                      medNombreMap[medId] ??
+                      'Medicamento';
+                  return _buildDosisRow(
+                    dosis['id']?.toString() ?? '',
+                    medId,
+                    nombreMed,
+                    'Pendiente',
+                    _formatearHora(
+                      dosis['fecha_hora'] ?? '',
+                    ),
+                    Colors.orange,
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistorialHoy(Map<String, String> medNombreMap, Set<String> medicamentoIds) {
+    return Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+              ),
+              SizedBox(width: 10),
+              Text(
+                "Historial de hoy",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF006064),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: supabase
+                .from('dosis')
+                .stream(primaryKey: ['id'])
+                .eq('estado', 'tomada'),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.green,
+                  ),
+                );
+              }
+
+              final allDosis = snapshot.data ?? [];
+              final dosisUser = allDosis
+                  .where(
+                    (d) => medicamentoIds.contains(
+                      d['medicamento_id'].toString(),
+                    ),
+                  )
+                  .toList();
+
+              final inicioHoy = DateTime.parse(
+                _obtenerFechaHoyInicio(),
+              );
+              final finHoy = DateTime.parse(
+                _obtenerFechaHoyFin(),
+              );
+
+              final listaHistorial = dosisUser.where((
+                d,
+              ) {
+                if (d['fecha_hora'] == null)
+                  return false;
+                final fechaDosis = DateTime.parse(
+                  d['fecha_hora'],
+                ).toLocal();
+                return fechaDosis.isAfter(
+                      inicioHoy,
+                    ) &&
+                    fechaDosis.isBefore(finHoy);
+              }).toList();
+
+              if (listaHistorial.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: 20,
+                  ),
+                  child: Text(
+                    "Aún no has registrado dosis tomadas hoy.",
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                );
+              }
+              return ListView.builder(
+                shrinkWrap: true,
+                physics:
+                    const NeverScrollableScrollPhysics(),
+                itemCount: listaHistorial.length,
+                itemBuilder: (context, index) {
+                  final dosis = listaHistorial[index];
+                  final String medId =
+                      dosis['medicamento_id']
+                          ?.toString() ??
+                      '';
+                  final String nombreMed =
+                      medNombreMap[medId] ??
+                      'Medicamento';
+                  return _buildDosisRow(
+                    dosis['id']?.toString() ?? '',
+                    medId,
+                    nombreMed,
+                    'Tomada',
+                    _formatearHora(
+                      dosis['fecha_hora'] ?? '',
+                    ),
+                    Colors.green,
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
+

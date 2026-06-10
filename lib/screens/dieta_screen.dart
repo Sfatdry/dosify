@@ -24,25 +24,11 @@ class _DietaScreenState extends State<DietaScreen> {
   DateTime? _fechaFinRaw;
 
   // Tratamiento seleccionado
-  List<Map<String, dynamic>> _tratamientos = [];
   String? _tratamientoSeleccionadoId;
 
   @override
   void initState() {
     super.initState();
-    _cargarTratamientos();
-  }
-
-  Future<void> _cargarTratamientos() async {
-    final String userId = widget.userId;
-    final data = await supabase
-        .from('tratamiento')
-        .select('id, nombre')
-        .eq('usuario_id', userId)
-        .order('nombre', ascending: true);
-    if (mounted) {
-      setState(() => _tratamientos = List<Map<String, dynamic>>.from(data));
-    }
   }
 
   Future<void> _selectDate(
@@ -87,6 +73,7 @@ class _DietaScreenState extends State<DietaScreen> {
     setState(() => _isSaving = true);
     try {
       await supabase.from('dieta').insert({
+        'usuario_id': widget.userId,
         'tratamiento_id': _tratamientoSeleccionadoId,
         'descripcion': _descripcionController.text.trim(),
         'fecha_inicio': _fechaInicioRaw?.toIso8601String().split('T').first,
@@ -205,7 +192,7 @@ class _DietaScreenState extends State<DietaScreen> {
 
                         // Selector de tratamiento
                         _buildLabel("Tratamiento asociado"),
-                        _tratamientos.isEmpty
+                        userTratamientos.isEmpty
                             ? const Text(
                                 "Crea un tratamiento primero",
                                 style: TextStyle(
@@ -238,7 +225,7 @@ class _DietaScreenState extends State<DietaScreen> {
                                     onChanged: (val) => setState(
                                       () => _tratamientoSeleccionadoId = val,
                                     ),
-                                    items: _tratamientos.map((t) {
+                                    items: userTratamientos.map((t) {
                                       return DropdownMenuItem<String>(
                                         value: t['id'].toString(),
                                         child: Text(
@@ -342,6 +329,7 @@ class _DietaScreenState extends State<DietaScreen> {
                       stream: supabase
                           .from('dieta')
                           .stream(primaryKey: ['id'])
+                          .eq('usuario_id', currentUserId)
                           .order('fecha_inicio', ascending: false),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==

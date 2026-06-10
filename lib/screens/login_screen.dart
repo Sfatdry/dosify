@@ -115,128 +115,131 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  'assets/dosify_logo_hd.PNG',
-                  width: 150,
-                  height: 150,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 150,
-                      height: 150,
-                      color: Colors.grey[300],
-                      child: const Icon(
-                        Icons.image,
-                        size: 50,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              const Text(
-                "Bienvenido",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF006064),
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                "Inicie sesión para continuar",
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-              const SizedBox(height: 40),
-
-              // Input Email
-              NeumorphicInput(
-                hintText: "Correo electrónico",
-                icon: Icons.email_outlined,
-                controller: _emailController,
-              ),
-              const SizedBox(height: 20),
-
-              // Input Contraseña
-              NeumorphicInput(
-                hintText: "Contraseña",
-                icon: Icons.lock_outline,
-                isPassword: true,
-                controller: _passwordController,
-              ),
-              const SizedBox(height: 40),
-
-              // Botón Iniciar Sesión
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () =>
-                            _handleLogin(), // 👈 REPARADO: Forzado de callback dinámico para Flutter Web
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: tealColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    elevation: 5,
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          "Iniciar Sesión",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/dosify_logo_hd.PNG',
+                    width: 150,
+                    height: 150,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 150,
+                        height: 150,
+                        color: Colors.grey[300],
+                        child: const Icon(
+                          Icons.image,
+                          size: 50,
+                          color: Colors.grey,
                         ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 30),
+                const SizedBox(height: 40),
 
-              // Enlace a Registro
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "¿No tienes cuenta? ",
-                    style: TextStyle(color: Colors.grey),
+                const Text(
+                  "Bienvenido",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF006064),
                   ),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RegisterScreen(),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  "Inicie sesión para continuar",
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+                const SizedBox(height: 40),
+
+                // Input Email
+                NeumorphicInput(
+                  hintText: "Correo electrónico",
+                  icon: Icons.email_outlined,
+                  controller: _emailController,
+                ),
+                const SizedBox(height: 20),
+
+                // Input Contraseña
+                NeumorphicInput(
+                  hintText: "Contraseña",
+                  icon: Icons.lock_outline,
+                  isPassword: true,
+                  controller: _passwordController,
+                ),
+                const SizedBox(height: 40),
+
+                // Botón Iniciar Sesión
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () =>
+                              _handleLogin(), // 👈 REPARADO: Forzado de callback dinámico para Flutter Web
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: tealColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      elevation: 5,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Iniciar Sesión",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // Enlace a Registro
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "¿No tienes cuenta? ",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
+                      ),
+                      child: const Text(
+                        "Regístrate",
+                        style: TextStyle(
+                          color: tealColor,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      "Regístrate",
-                      style: TextStyle(
-                        color: tealColor,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
