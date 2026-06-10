@@ -3,9 +3,72 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+
+class _RelojEnVivo extends StatefulWidget {
+  final bool isMobile;
+  final Color primaryColor;
+
+  const _RelojEnVivo({required this.isMobile, required this.primaryColor});
+
+  @override
+  State<_RelojEnVivo> createState() => _RelojEnVivoState();
+}
+
+class _RelojEnVivoState extends State<_RelojEnVivo> {
+  late Timer _timer;
+  late DateTime _ahora;
+
+  @override
+  void initState() {
+    super.initState();
+    _ahora = DateTime.now();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {
+          _ahora = DateTime.now();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String fechaHoy = DateFormat('EEEE, d de MMMM', 'es').format(_ahora);
+    final String horaHoy = DateFormat('h:mm a').format(_ahora);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          fechaHoy,
+          style: TextStyle(
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+            fontSize: widget.isMobile ? 12 : 14,
+          ),
+        ),
+        Text(
+          horaHoy,
+          style: TextStyle(
+            color: widget.primaryColor,
+            fontWeight: FontWeight.bold,
+            fontSize: widget.isMobile ? 14 : 16,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class DashboardScreen extends StatefulWidget {
   final String userName;
@@ -121,11 +184,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
-    final String fechaHoy = DateFormat(
-      'EEEE, d de MMMM',
-      'es',
-    ).format(DateTime.now());
-    final String horaHoy = DateFormat('h:mm a').format(DateTime.now());
     final String currentUserId = widget.userId;
 
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -180,49 +238,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "¡Hola, ${widget.userName}! 👋",
-                                  style: TextStyle(
-                                    fontSize: isMobile ? 22 : 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF006064),
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                if (!isMobile)
-                                  const Text(
-                                    "Control inteligente de tus medicamentos",
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "¡Hola, ${widget.userName}! 👋",
                                     style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 14,
+                                      fontSize: isMobile ? 22 : 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF006064),
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                              ],
+                                  const SizedBox(height: 5),
+                                  if (!isMobile)
+                                    const Text(
+                                      "Control inteligente de tus medicamentos",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  fechaHoy,
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: isMobile ? 12 : 14,
-                                  ),
-                                ),
-                                Text(
-                                  horaHoy,
-                                  style: TextStyle(
-                                    color: primaryCyan,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: isMobile ? 14 : 16,
-                                  ),
-                                ),
-                              ],
-                            ),
+                            _RelojEnVivo(isMobile: isMobile, primaryColor: primaryCyan),
                           ],
                         ),
                         const SizedBox(height: 35),

@@ -406,26 +406,28 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 15),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "Configurar Alertas",
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF1E293B),
+                                  Flexible(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Configurar Alertas",
+                                          style: TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1E293B),
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        "Hola ${widget.userName}, gestiona tus avisos",
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey,
+                                        Text(
+                                          "Hola ${widget.userName}, gestiona tus avisos",
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -632,22 +634,28 @@ class _RecordatorioScreenState extends State<RecordatorioScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.toggle_on_outlined,
-                                          color: Color(0xFF0284C7),
-                                        ),
-                                        SizedBox(width: 12),
-                                        Text(
-                                          "¿Recordatorio activo?",
-                                          style: TextStyle(
-                                            color: Color(0xFF0369A1),
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
+                                    Expanded(
+                                      child: Row(
+                                        children: const [
+                                          Icon(
+                                            Icons.toggle_on_outlined,
+                                            color: Color(0xFF0284C7),
                                           ),
-                                        ),
-                                      ],
+                                          SizedBox(width: 12),
+                                          Flexible(
+                                            child: Text(
+                                              "¿Recordatorio activo?",
+                                              style: TextStyle(
+                                                color: Color(0xFF0369A1),
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                     Switch(
                                       value: isRecordatorioActivo,

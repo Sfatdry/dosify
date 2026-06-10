@@ -558,26 +558,30 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                                           ),
                                         ),
                                         const SizedBox(width: 15),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: const [
-                                            Text(
-                                              "Medicamento crítico",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF006064),
-                                                fontSize: 15,
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: const [
+                                              Text(
+                                                "Medicamento crítico",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF006064),
+                                                  fontSize: 15,
+                                                ),
                                               ),
-                                            ),
-                                            Text(
-                                              "Requiere adherencia estricta",
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 13,
+                                              Text(
+                                                "Requiere adherencia estricta",
+                                                style: TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 13,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),

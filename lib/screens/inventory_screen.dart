@@ -383,24 +383,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                nombre,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  nombre,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                "Quedan $cantidadActual unidades (~$diasRestantes días)",
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
+                                Text(
+                                  "Quedan $cantidadActual unidades (~$diasRestantes días)",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           Text(
                             urgenciaText,
@@ -450,15 +452,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
           child: Icon(icon, color: Colors.white),
         ),
         const SizedBox(width: 15),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(sub, style: const TextStyle(color: Colors.grey)),
-          ],
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              Text(sub, style: const TextStyle(color: Colors.grey)),
+            ],
+          ),
         ),
       ],
     );

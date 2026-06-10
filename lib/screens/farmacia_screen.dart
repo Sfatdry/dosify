@@ -192,12 +192,16 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
                           ),
                         ),
                         const SizedBox(width: 15),
-                        const Text(
-                          "Registrar Farmacia",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF006064),
+                        Expanded(
+                          child: const Text(
+                            "Registrar Farmacia",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF006064),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

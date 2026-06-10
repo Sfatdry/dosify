@@ -146,75 +146,88 @@ class _MainNavigationState extends State<MainNavigation> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00ACC1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.local_hospital_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Dosify",
-                          style: TextStyle(
-                            fontSize: isMobile ? 18 : 22,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF006064),
-                          ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00ACC1),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        if (!isMobile)
-                          const Text(
-                            "Control inteligente de medicamentos",
-                            style: TextStyle(fontSize: 11, color: Colors.grey),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (!isMobile)
-                          const Text(
-                            "Bienvenida",
-                            style: TextStyle(fontSize: 11, color: Colors.grey),
-                          ),
-                        Text(
-                          widget.userName,
-                          style: TextStyle(
-                            fontSize: isMobile ? 13 : 15,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF006064),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 12),
-                    CircleAvatar(
-                      radius: isMobile ? 15 : 18,
-                      backgroundColor: const Color(0xFF00C853),
-                      child: Text(
-                        initial,
-                        style: TextStyle(
+                        child: const Icon(
+                          Icons.local_hospital_rounded,
                           color: Colors.white,
-                          fontSize: isMobile ? 12 : 14,
-                          fontWeight: FontWeight.bold,
+                          size: 24,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Dosify",
+                              style: TextStyle(
+                                fontSize: isMobile ? 18 : 22,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF006064),
+                              ),
+                            ),
+                            if (!isMobile)
+                              const Text(
+                                "Control inteligente de medicamentos",
+                                style: TextStyle(fontSize: 11, color: Colors.grey),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (!isMobile)
+                              const Text(
+                                "Bienvenida",
+                                style: TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                            Text(
+                              widget.userName,
+                              style: TextStyle(
+                                fontSize: isMobile ? 13 : 15,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF006064),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      CircleAvatar(
+                        radius: isMobile ? 15 : 18,
+                        backgroundColor: const Color(0xFF00C853),
+                        child: Text(
+                          initial,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isMobile ? 12 : 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
