@@ -306,7 +306,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
           // --- CONTENIDO VARIABLE ---
           Expanded(
-            child: IndexedStack(index: _selectedIndex, children: _screens),
+            child: _screens[_selectedIndex],
           ),
         ],
       ),

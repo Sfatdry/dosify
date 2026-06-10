@@ -248,7 +248,12 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                   }
 
                   return Center(
-                    child: SingleChildScrollView(
+                    child: RefreshIndicator(
+                      onRefresh: () async {
+                        setState(() {});
+                      },
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(30),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -656,14 +661,15 @@ class _MedicamentoScreenState extends State<MedicamentoScreen> {
                         ],
                       ),
                     ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
-    );
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    ),
+  );
   }
 
   Widget _buildLabel(String text) {

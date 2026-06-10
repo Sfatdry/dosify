@@ -149,7 +149,12 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
       body: _isLoadingUser
           ? const Center(child: CircularProgressIndicator(color: primaryCyan))
           : Center(
-              child: SingleChildScrollView(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {});
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 20,
@@ -373,6 +378,7 @@ class _TratamientoScreenState extends State<TratamientoScreen> {
                 ),
               ),
             ),
+          ),
     );
   }
 

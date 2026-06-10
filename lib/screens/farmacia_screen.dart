@@ -147,8 +147,13 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {});
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
         child: Center(
           child: Column(
             children: [
@@ -448,7 +453,8 @@ class _FarmaciaScreenState extends State<FarmaciaScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildLabel(String text) {

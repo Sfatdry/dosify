@@ -88,7 +88,14 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
         final dir = await getApplicationDocumentsDirectory();
         final filePath = '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
         
-        await _audioRecorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: filePath);
+        await _audioRecorder.start(
+          const RecordConfig(
+            encoder: AudioEncoder.aacLc,
+            bitRate: 128000,
+            sampleRate: 44100,
+          ), 
+          path: filePath
+        );
         
         if (available) {
           _speech.listen(
@@ -229,7 +236,13 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
               .map((t) => t['id'].toString())
               .toSet();
 
-          return SingleChildScrollView(
+          return RefreshIndicator(
+            onRefresh: () async {
+              _cargarTratamientos();
+              setState(() {});
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
             child: Center(
               child: Column(
@@ -558,6 +571,7 @@ class _NotaDeVozScreenState extends State<NotaDeVozScreen> {
                   ),
                 ],
               ),
+            ),
             ),
           );
         },

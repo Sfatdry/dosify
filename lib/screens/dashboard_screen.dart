@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String userName;
@@ -20,11 +23,54 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final SupabaseClient supabase = Supabase.instance.client;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _playingNotaId;
 
   @override
   void dispose() {
     _audioPlayer.dispose();
     super.dispose();
+  }
+
+  Future<void> _playAudio(String id, String urlAudio) async {
+    try {
+      if (_playingNotaId == id) {
+        await _audioPlayer.stop();
+        setState(() => _playingNotaId = null);
+        return;
+      }
+      
+      final parts = urlAudio.split('|');
+      final audioData = parts[0];
+      
+      if (audioData.startsWith('base64:')) {
+        final base64String = audioData.replaceFirst('base64:', '');
+        final bytes = base64Decode(base64String);
+        
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/temp_audio_$id.m4a');
+        await file.writeAsBytes(bytes);
+        
+        setState(() => _playingNotaId = id);
+        
+        await _audioPlayer.play(DeviceFileSource(file.path));
+        
+        _audioPlayer.onPlayerComplete.listen((_) {
+          if (mounted) setState(() => _playingNotaId = null);
+        });
+      } else if (audioData.startsWith('http')) {
+        setState(() => _playingNotaId = id);
+        await _audioPlayer.play(UrlSource(audioData));
+        _audioPlayer.onPlayerComplete.listen((_) {
+          if (mounted) setState(() => _playingNotaId = null);
+        });
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Formato de audio no soportado.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.orange));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al reproducir audio: $e', style: const TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+    }
   }
 
   // Formateadores útiles para limpiar fechas y horas de Supabase
@@ -120,7 +166,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               body: Center(
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 800),
-                  child: SingleChildScrollView(
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      setState(() {});
+                    },
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                     padding: EdgeInsets.all(isMobile ? 15 : 30),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -714,24 +765,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           child: Row(
                                             children: [
                                               GestureDetector(
-                                                onTap: () {
-                                                  if (audioUrl.startsWith('http')) {
-                                                    _audioPlayer.play(UrlSource(audioUrl));
-                                                  } else {
-                                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No hay audio grabado para reproducir.')));
-                                                  }
-                                                },
+                                                onTap: () => _playAudio(nota['id'].toString(), rawAudio),
                                                 child: Container(
                                                   padding:
                                                       const EdgeInsets.all(10),
                                                   decoration: BoxDecoration(
-                                                    color: Colors.orange
-                                                        .withOpacity(0.1),
+                                                    color: _playingNotaId == nota['id'].toString() ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.1),
                                                     shape: BoxShape.circle,
                                                   ),
-                                                  child: const Icon(
-                                                    Icons.play_arrow_rounded,
-                                                    color: Colors.orange,
+                                                  child: Icon(
+                                                    _playingNotaId == nota['id'].toString() ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                                                    color: _playingNotaId == nota['id'].toString() ? Colors.green : Colors.orange,
                                                     size: 24,
                                                   ),
                                                 ),
@@ -787,6 +831,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                   ),
+                ),
                 ),
               ),
             );

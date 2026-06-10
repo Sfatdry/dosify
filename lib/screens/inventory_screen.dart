@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class InventoryScreen extends StatelessWidget {
+class InventoryScreen extends StatefulWidget {
   final String userName;
   final String userId;
   final VoidCallback? onVerFarmacias;
@@ -14,10 +14,15 @@ class InventoryScreen extends StatelessWidget {
   });
 
   @override
+  State<InventoryScreen> createState() => _InventoryScreenState();
+}
+
+class _InventoryScreenState extends State<InventoryScreen> {
+  @override
   Widget build(BuildContext context) {
     const Color primaryCyan = Color(0xFF00ACC1);
     final SupabaseClient supabase = Supabase.instance.client;
-    final String currentUserId = userId;
+    final String currentUserId = widget.userId;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -126,7 +131,12 @@ class InventoryScreen extends StatelessWidget {
                   return Center(
                     child: Container(
                       constraints: const BoxConstraints(maxWidth: 900),
-                      child: SingleChildScrollView(
+                      child: RefreshIndicator(
+                        onRefresh: () async {
+                          setState(() {});
+                        },
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(30),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -233,8 +243,9 @@ class InventoryScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                  );
-                },
+                  ),
+                );
+              },
               );
             },
           );
@@ -405,7 +416,7 @@ class InventoryScreen extends StatelessWidget {
                 ),
           const SizedBox(height: 30),
           ElevatedButton(
-            onPressed: onVerFarmacias,
+            onPressed: widget.onVerFarmacias,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               minimumSize: const Size(300, 55),

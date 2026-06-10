@@ -139,7 +139,12 @@ class _DietaScreenState extends State<DietaScreen> {
               .toSet();
 
           return Center(
-            child: SingleChildScrollView(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                setState(() {});
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
               child: Column(
                 children: [
@@ -387,6 +392,7 @@ class _DietaScreenState extends State<DietaScreen> {
                   ),
                 ],
               ),
+            ),
             ),
           );
         },

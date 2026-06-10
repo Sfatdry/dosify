@@ -162,12 +162,17 @@ class _DosisScreenState extends State<DosisScreen> {
                 _medicamentoSeleccionadoId = null;
               }
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 40,
-                  horizontal: 20,
-                ),
-                child: Center(
+              return RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {});
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 40,
+                    horizontal: 20,
+                  ),
+                  child: Center(
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 500),
                     padding: const EdgeInsets.all(35),
@@ -435,6 +440,7 @@ class _DosisScreenState extends State<DosisScreen> {
                         ),
                       ],
                     ),
+                  ),
                   ),
                 ),
               );

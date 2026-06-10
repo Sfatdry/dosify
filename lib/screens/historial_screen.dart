@@ -102,8 +102,12 @@ class _HistorialScreenState extends State<HistorialScreen> {
                       ? ((dosisTomadas + dosisTardias) / totalDosis) * 100
                       : 0.0;
 
-                  return SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      setState(() {});
+                    },
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(25),
                     child: Center(
                       child: Container(
@@ -374,14 +378,15 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         ),
                       ),
                     ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
-    );
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    ),
+  );
   }
 
   Widget _buildMiniCard({
